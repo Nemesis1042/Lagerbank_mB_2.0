@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Checkout System</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+  </head>
+  <body>
+    <header>
+      <h1 class="topic">Teilnehmer auschecken</h1>
+      <nav>
+          <ul>
+              <li><a href="/">Startseite</a></li>
+              <li><a href="/add_buy">Kauf hinzufügen</a></li>
+              <li><a href="/watch">Auswertung</a></li>
+              <li><a href="/admin">Einstellungen</a></li>
+              <li><a href="#" onclick="history.back();">Zurück</a></li>
+          </ul>
+      </nav>
+  </header>
+  <main>
+    <div class="">
+      <h1>Teilnehmer auswählen</h1>
+      <form action="{{ url_for('checkout') }}" method="post">
+        <select name="user">
+          {% for user in users %}
+          <option value="{{ user }}">{{ user }}</option>
+          {% endfor %}
+        </select>
+        <button class="bt" type="submit">Checkout</button>
+      </form>
+    </div>
+  </main>
+  </body>
+</html>

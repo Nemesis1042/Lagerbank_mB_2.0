@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1 class="topic">Admin Panel</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/add_buy">Kauf hinzufügen</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="admin-content">
+        <div class="category">
+            <h2></h2>
+            <a href="/settings" class="admin-link">Einstellungen</a>
+            <a href="/teilnehmer" class="admin-link">Teilnehmer</a>
+            <a href="/produkte" class="admin-link">Produkte</a>
+            <a href="/statistik" class="admin-link">Statistik</a>
+            <a href="/dblogin" class="admin-link">Datenbankverwaltung</a>
+        </div>
+    </div>
+    
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Checkout Status</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <style>
+      .formbt{
+        text-align: center;
+        border: none;
+        border-radius: 5px;
+        padding: 5px;
+        cursor: pointer;
+        display: block;
+        margin: 10px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 class="topic">Checkout Status</h1>
+      <nav>
+          <ul>
+              <li><a href="/add_user">Nutzer hinzufügen</a></li>
+              <li><a href="/watch">Auswertung</a></li>
+              <li><a href="/admin">Einstellungen</a></li>
+          </ul>
+      </nav>
+  </header>
+  <main>
+    <div class="container">
+      
+      
+      <p>Benutzer: {{ benutzer_id }}</p>
+      <p>Kontostand: {{ kontostand }} €</p>
+      <h2>Benötigte Geldaufteilung</h2>
+      <ul>
+        {% for denom, count in counts.items() %}
+        <li class="li">{{ denom }}€: {{ count }}x</li>
+        {% endfor %}
+    </ul>
+      <form class="formbt" method="post" action="{{ url_for('confirm_checkout') }}">
+        <input type="hidden" name="user" value="{{ benutzer_id }}">
+        <button  class="bt" type="submit">Checkout bestätigen</button>
+    </form>
+    </div>
+  </main>
+  </body>
+</html>

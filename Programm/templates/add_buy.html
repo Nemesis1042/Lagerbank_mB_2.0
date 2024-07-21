@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kauf hinzufügen</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1 class="topic">Kauf</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/add_buy">Kauf hinzufügen</a></li>
+                <!--<li><a href="/watch">Übersicht</a></li>-->
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div>
+            <h1>Kauf hinzufügen</h1>
+            <form id="buyForm" action="/submit_buy" method="post">
+                <label for="user">Teilnehmer wählen:</label>
+                <select id="user" name="user">
+                    {% for user in users %}
+                    <option value="{{ user }}">{{ user }}</option>
+                    {% endfor %}
+                </select>
+                <!--<div id="numberMatrix" style="display: flex; flex-wrap: wrap; justify-content: center;">
+                    {% for user in users %}
+                        <button type="button" onclick="selectUser('{{ user.id }}')" style="margin: 5px;">{{ user.name }}</button>
+                    {% else %}
+                        <p>Keine Teilnehmer verfügbar.</p>
+                    {% endfor %}
+                </div>-->
+                <label for="product">Produkt wählen:</label>
+                <select id="product" name="product">
+                    {% for product in products %}
+                    <option value="{{ product }}">{{ product }}</option>
+                    {% endfor %}
+                </select>
+                <label for="quantity">Menge wählen:</label>
+                <input type="number" id="quantity" name="quantity" min="1" max="6" value="1">
+                <input type="hidden" id="TN_Barcode" name="TN_Barcode">
+                <input type="submit" value="Kauf hinzufügen">
+            </form>
+        </div>
+    </main>
+   
+</body>
+</html>

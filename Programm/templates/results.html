@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geld Aufteilen</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1 class="topic">Geld Aufteilen</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/add_buy">Kauf hinzufügen</a></li>
+                <li><a href="/watch">Übersicht</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="container">            
+            <ul>
+                {% for denom, count in results.counts.items() %}
+                    <li class="li">{{ denom }} €: {{ count }}x</li>
+                {% endfor %}
+                <li class="highlight">Summe: {{ results.sume | round(2) }} €</li>
+                <li class="highlight">Gesamt Kontostand: {{ results.gesamt_kontostand | round(2) }} €</li>
+            </ul>
+        </div>
+    </main>
+</body>
+</html>
