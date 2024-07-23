@@ -1,4 +1,4 @@
-# Lagerbank_oB
+# Lagerbank_mB
 
 # Anleitung zur Installation von Python und Bibliotheken
 
