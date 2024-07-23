@@ -6,6 +6,17 @@
     <title>Kauf hinzufügen</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
+<style type="text/css">
+    .productBarcodeInput {
+        display: none;
+
+    }
+
+    .productBarcodeLabel {
+        display: none;
+        
+    }
+</style>
 <body>
     <header>
         <h1 class="topic">Kauf</h1>
@@ -20,21 +31,22 @@
     <main>
         <div>
             <h1>Kauf hinzufügen</h1>
+            <p>Scanne den speziellen Barcode "Brake", um den Kauf abzuschließen.</p>
             <form id="buyForm" action="/submit_buy" method="post">
-                <label for="TN_Barcode">Teilnehmerbarcode:</label>
-                <input id="TN_Barcode" name="TN_Barcode" autofocus>
-                <label for="P_Barcode1" style="display:none;">Produktbarcode 1:</label>
-                <input id="P_Barcode1" name="P_Barcode1" style="display:none;">
-                <label for="P_Barcode2" style="display:none;">Produktbarcode 2:</label>
-                <input id="P_Barcode2" name="P_Barcode2" style="display:none;">
-                <label for="P_Barcode3" style="display:none;">Produktbarcode 3:</label>
-                <input id="P_Barcode3" name="P_Barcode3" style="display:none;">
-                <label for="P_Barcode4" style="display:none;">Produktbarcode 4:</label>
-                <input id="P_Barcode4" name="P_Barcode4" style="display:none;">
-                <label for="P_Barcode5" style="display:none;">Produktbarcode 5:</label>
-                <input id="P_Barcode5" name="P_Barcode5" style="display:none;">
-                <label for="P_Barcode6" style="display:none;">Produktbarcode 6:</label>
-                <input id="P_Barcode6" name="P_Barcode6" style="display:none;">
+                <label for="TN_Barcode" class="participantBarcodeLabel">Teilnehmerbarcode:</label>
+                <input id="TN_Barcode" name="TN_Barcode" class="participantBarcodeInput" autofocus>
+                <label for="P_Barcode1" class="productBarcodeLabel" style="display:none;">Produktbarcode 1:</label>
+                <input id="P_Barcode1" name="P_Barcode1" class="productBarcodeInput" style="display:none;">
+                <label for="P_Barcode2" class="productBarcodeLabel" style="display:none;">Produktbarcode 2:</label>
+                <input id="P_Barcode2" name="P_Barcode2" class="productBarcodeInput" style="display:none;">
+                <label for="P_Barcode3" class="productBarcodeLabel" style="display:none;">Produktbarcode 3:</label>
+                <input id="P_Barcode3" name="P_Barcode3" class="productBarcodeInput" style="display:none;">
+                <label for="P_Barcode4" class="productBarcodeLabel" style="display:none;">Produktbarcode 4:</label>
+                <input id="P_Barcode4" name="P_Barcode4" class="productBarcodeInput" style="display:none;">
+                <label for="P_Barcode5" class="productBarcodeLabel" style="display:none;">Produktbarcode 5:</label>
+                <input id="P_Barcode5" name="P_Barcode5" class="productBarcodeInput" style="display:none;">
+                <label for="P_Barcode6" class="productBarcodeLabel" style="display:none;">Produktbarcode 6:</label>
+                <input id="P_Barcode6" name="P_Barcode6" class="productBarcodeInput" style="display:none;">
                 <input type="submit" value="Kauf hinzufügen">
             </form>
         </div>
@@ -53,8 +65,8 @@
             });
 
             // Show the first product barcode input field
-            document.getElementById(barcodeInputs[currentIndex]).style.display = 'block';
-            document.querySelector(`label[for=${barcodeInputs[currentIndex]}]`).style.display = 'block';
+            document.getElementById(barcodeInputs[currentIndex]).style.display = 'flex';
+            document.querySelector(`label[for=${barcodeInputs[currentIndex]}]`).style.display = 'flex';
 
             // Listen for keypress events on the document
             document.addEventListener('keypress', function (e) {

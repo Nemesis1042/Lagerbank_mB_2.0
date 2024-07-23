@@ -480,6 +480,7 @@ def withdraw_fund():
 def edit_user():
     if request.method == 'POST':
         selected_user = request.form.get('selected_user')
+        
         action = request.form.get('action')
         conn = get_db_connection()
         cur = conn.cursor()
@@ -494,6 +495,18 @@ def edit_user():
                 print('Benutzername erfolgreich aktualisiert.', 'success')
             except Exception as e:
                 print(f'Fehler beim Aktualisieren des Benutzernamens: {e}', 'danger')
+        elif action == 'update_b':
+            new_barcode = request.form.get('new_barcode')
+            if not selected_user or not new_name:
+                print('Bitte füllen Sie alle Felder aus.', 'danger')
+                return redirect(url_for('edit_user'))
+            try:
+                cur.execute("UPDATE Teilnehmer SET TN_Barcode = ? WHERE Name = ?", (new_name, selected_user))
+                conn.commit()
+                print('Barcode erfolgreich aktualisiert.', 'success')
+            except Exception as e:
+                print(f'Fehler beim Aktualisieren des Barcodes: {e}', 'danger')
+                
         elif action == 'delete':
             if not selected_user:
                 print('Bitte wählen Sie einen Benutzer aus.', 'danger')
@@ -519,6 +532,7 @@ def edit_user():
 def add_product():
     if request.method == 'POST':
         product = request.form['product']
+        P_barcode = request.form['P_barcode']
         price = float(request.form['price'])
         conn = get_db_connection()
         cur = conn.cursor()
@@ -526,7 +540,7 @@ def add_product():
         if cur.fetchone():
             print('Produkt existiert bereits!', 'danger')
         else:
-            cur.execute("INSERT INTO Produkt (Beschreibung, Preis, Anzahl_verkauft) VALUES (?, ?, 0)", (product, price))
+            cur.execute("INSERT INTO Produkt (Beschreibung, P_Produktbarcode, Preis, Anzahl_verkauft) VALUES (?, ?,?, 0)", (product, P_barcode, price))
             conn.commit()
             print('Produkt erfolgreich hinzugefügt.', 'success')
         conn.close()
