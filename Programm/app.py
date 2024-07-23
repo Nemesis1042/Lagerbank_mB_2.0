@@ -226,10 +226,17 @@ def aktualisere_endkontostand():
         db.close()
 
 # Routen
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     print('index')
-    return render_template('index.html')
+    with Database() as db:
+        titel = db.execute_select("SELECT Zeltlagername FROM Einstellungen")
+        if titel:
+            titel = titel[0][0]
+        else:
+            titel = "Kein Titel gefunden"
+    print(titel)
+    return render_template('index.html', titel=titel)
 
 @app.route('/update_product_dropdowns', methods=['GET'])
 def update_product_dropdowns_route():
@@ -264,26 +271,6 @@ def buy_check():
     products = request.args.getlist('products')  # Produkte aus den URL-Parametern abrufen
     # Logik für die buy_check-Seite
     return render_template('buy_check.html', username=username, products=products)
-
-
-
-# @app.route('/submit_buy', methods=['POST'])
-# def submit_buy():
-#     if request.method == 'POST':
-#         user = request.form['TN_Barcode']
-#         products = [request.form[f'P_Barcode{i}'] for i in range(1, 8) if f'P_Barcode{i}' in request.form]
-#         
-#         success = submit_purchase(user, products)
-#         if success:
-#             aktualisere_endkontostand()
-#             print('Kauf erfolgreich hinzugefügt', 'success')
-#         else:
-#             print('Fehler beim Hinzufügen des Kaufs', 'danger')
-#         return redirect(url_for('add_buy'))
-#     
-#     db = Database()  # Stellen Sie sicher, dass db korrekt initialisiert ist
-#     IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
-#     return render_template('add_buy.html', IDs=IDs)
 
 @app.route('/watch')
 def watch():
@@ -331,7 +318,7 @@ def admin():
     print('admin') # Debugging-Information
     return render_template('admin.html')
 
-@app.route('/dblogin', methods=['GET', 'POST'])  # Hinzufügen des fehlenden Schrägstrichs
+@app.route('/dblogin', methods=['GET', 'POST'])  # Hinzufügen des fehlenden Schrägs@
 def dblogin():
     print('dblogin') # Debugging-Information
     if request.method == 'POST':
@@ -652,11 +639,13 @@ def create_kaufstatistik_tab():
     print('kaufstatistik') # Debugging-Information
     try:
         with Database() as db:
-            sql_query = '''SELECT Produkt.Beschreibung, SUM(Transaktion.Menge) AS Anzahl_verkauft
-                           FROM Produkt
-                           JOIN Transaktion ON Produkt.P_ID = Transaktion.P_ID
-                           GROUP BY Produkt.Beschreibung
-                           ORDER BY Anzahl_verkauft DESC;'''
+            sql_query = '''
+                        SELECT Produkt.Beschreibung, SUM(Transaktion.Menge) AS Anzahl_verkauft
+                        FROM Produkt
+                        JOIN Transaktion ON Produkt.P_ID = Transaktion.P_ID
+                        GROUP BY Produkt.Beschreibung
+                        ORDER BY Anzahl_verkauft DESC;
+                        '''
             result = db.execute_select(sql_query)
             df = pd.DataFrame(result, columns=[desc[0] for desc in db.cursor.description])
             data = df.to_dict(orient='records')
@@ -740,25 +729,26 @@ def settings():
     
     if request.method == 'POST':
         try:
-            # Get dates from form
+            # Get dates and name from form
             first_day = request.form['formatted_first_day']
             last_day = request.form['formatted_last_day']
+            lagername = request.form['lagername']
             
             # Validate and convert dates
-            if first_day and last_day:
+            if first_day and last_day and lagername:
                 # Convert to '%Y-%m-%d' format for database update
                 first_day_db_format = datetime.strptime(first_day, '%d-%m-%Y').strftime('%Y-%m-%d')
                 last_day_db_format = datetime.strptime(last_day, '%d-%m-%Y').strftime('%Y-%m-%d')
                 
                 # Update database
-                conn.execute("UPDATE Einstellungen SET first_day = ? WHERE Zeltlager = ?", (first_day_db_format, Zeltlager.lager))
-                conn.execute("UPDATE Einstellungen SET last_day = ? WHERE Zeltlager = ?", (last_day_db_format, Zeltlager.lager))
+                conn.execute("UPDATE Einstellungen SET first_day = ?, last_day = ?, Zeltlagername = ? WHERE Zeltlager = ?", 
+                             (first_day_db_format, last_day_db_format, lagername, Zeltlager.lager))
                 conn.commit()
                 
                 print("Erfolg: Einstellungen erfolgreich aktualisiert.")
                 return redirect(url_for('settings'))  # Redirect to GET /settings after POST
             else:
-                print("Fehler: Eingabe für Erster Tag oder Letzter Tag ist leer.")
+                print("Fehler: Eingabe für Erster Tag, Letzter Tag oder Lagername ist leer.")
                 return redirect(url_for('settings'))
             
         except Exception as e:
@@ -768,11 +758,13 @@ def settings():
     # Handle GET request to populate form fields
     first_day_row = conn.execute("SELECT first_day FROM Einstellungen WHERE Zeltlager = ?", (Zeltlager.lager,)).fetchone()
     last_day_row = conn.execute("SELECT last_day FROM Einstellungen WHERE Zeltlager = ?", (Zeltlager.lager,)).fetchone()
+    lagername_row = conn.execute("SELECT Zeltlagername FROM Einstellungen WHERE Zeltlager = ?", (Zeltlager.lager,)).fetchone()
     
     conn.close()
     
     first_day = datetime.strptime(first_day_row['first_day'], '%Y-%m-%d').strftime('%d-%m-%Y') if first_day_row else ''
     last_day = datetime.strptime(last_day_row['last_day'], '%Y-%m-%d').strftime('%d-%m-%Y') if last_day_row else ''
+    lagername = lagername_row['Zeltlagername'] if lagername_row else ''
     
     lager_dauer = (datetime.strptime(last_day, '%d-%m-%Y') - datetime.strptime(first_day, '%d-%m-%Y')).days
     
@@ -780,7 +772,7 @@ def settings():
     
     # Render settings page with form fields
     
-    return render_template('settings.html', first_day=first_day, lager_dauer=lager_dauer, last_day=last_day, today=heute)
+    return render_template('settings.html', first_day=first_day, lager_dauer=lager_dauer, last_day=last_day, today=heute, lagername=lagername)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

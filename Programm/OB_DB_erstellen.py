@@ -62,13 +62,14 @@ def create_database(datenbankname):
     cursor.execute('''CREATE TABLE IF NOT EXISTS Einstellungen (
         first_day DATE,
         last_day DATE,
-        Zeltlager INT
+        Zeltlager INT,
+        Zeltlagername VARCHAR(50)
     );''')
     cursor.connection.commit()
 
     # Daten in die Tabelle "Einstellungen" einfügen
-    cursor.execute('''INSERT INTO Einstellungen (first_day, last_day, Zeltlager) 
-                      SELECT '2024-01-01', '2024-12-31', '2024' 
+    cursor.execute('''INSERT INTO Einstellungen (first_day, last_day, Zeltlager, Zeltlagername) 
+                      SELECT '2024-01-01', '2024-12-31', '2024', 'BuLa'
                       WHERE NOT EXISTS (SELECT 1 FROM Einstellungen)''')
     cursor.connection.commit()
     print("Einstellungen wurden erfolgreich erstellt!")

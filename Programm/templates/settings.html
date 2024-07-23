@@ -23,6 +23,10 @@
         <div class="container mt-5">
             <form id="date_form" action="/settings" method="POST">
                 <div class="form-group">
+                    <label for="lagername">Lagername:</label>
+                    <input type="text" class="form-control" id="lagername" name="lagername" value="{{ lagername }}">
+                </div>
+                <div class="form-group">
                     <label for="first_day">Erster Tag:</label>
                     <input type="date" class="form-control" id="first_day" name="first_day" value="{{ first_day }}">
                 </div>
@@ -37,6 +41,7 @@
             <hr>
             <div>
                 <h4>Aktuelle Einstellungen</h4>
+                <p>Lagername: {{lagername}}</p>
                 <p>Startdatum: {{ first_day }}</p>
                 <p>Lagerdauer: {{ lager_dauer }} Tage</p>
                 <p>Enddatum: {{ last_day }}</p>
@@ -48,6 +53,7 @@
         document.getElementById('date_form').addEventListener('submit', function(event) {
             var firstDayInput = document.getElementById('first_day').value;
             var lastDayInput = document.getElementById('last_day').value;
+            var lagernameInput = document.getElementById('lagername').value;
         
             if (firstDayInput) {
                 var firstDayParts = firstDayInput.split('-');
