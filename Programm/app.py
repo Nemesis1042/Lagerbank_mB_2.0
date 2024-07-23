@@ -27,6 +27,7 @@ app.config.from_object('config.Config')
 
 # Funktionen
 def get_users_from_db():
+    print('get_users_from_db') # Debugging-Information
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT Name FROM Teilnehmer ORDER BY Name")
@@ -35,6 +36,7 @@ def get_users_from_db():
     return [user['Name'] for user in users]
 
 def get_products_from_db():
+    print('get_products_from_db') # Debugging-Information
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT Beschreibung FROM Produkt")
@@ -43,9 +45,11 @@ def get_products_from_db():
     return [product['Beschreibung'] for product in products]
 
 def get_db():
+    print('get_db') # Debugging-Information
     return sqlite3.connect(app.config['SQLALCHEMY_DATABASE_URI'].split('///')[-1])
 
 def submit_purchase(user, products, quantity = 1):
+    print('submit_purchase') # Debugging-Information
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -97,6 +101,7 @@ def submit_purchase(user, products, quantity = 1):
             # Änderungen speichern
             conn.commit()
             print("Transaktion hinzugefügt!")
+            return redirect('buy_check.html')
         return True
     except Exception as e:
         print(f"Fehler beim Hinzufügen der Transaktion: {e}")
@@ -105,14 +110,17 @@ def submit_purchase(user, products, quantity = 1):
         conn.close()
 
 def fetch_users(db: Database) -> List[str]:
+    print('fetch_users') # Debugging-Information
     users = [user[0] for user in db.execute_select("SELECT Name FROM Teilnehmer ORDER BY Name")]  # Ruft Benutzernamen aus der Datenbank ab
     return users
 
 def fetch_products(db: Database) -> List[str]:
+    print('fetch_products') # Debugging-Information
     products = [product[0] for product in db.execute_select("SELECT Beschreibung FROM Produkt ORDER BY Preis")]  # Ruft Produktbeschreibungen aus der Datenbank ab
     return products
 
 def fetch_transactions(db: Database, user_id: int) -> List[Tuple]:
+    print('fetch_transactions') # Debugging-Information
     transactions = db.execute_select("SELECT * FROM Transaktion WHERE K_ID = ? ORDER BY Datum DESC", (user_id,))  # Ruft Transaktionen für einen bestimmten Benutzer ab
     return transactions
 
@@ -134,6 +142,7 @@ def kontostand_in_geld(kontostand):
     return counts
 
 def create_backup(source_file, backup_directory):
+    print("Erstelle Backup...") # Debugging-Information
     try:
         # Prüfen, ob die Quelldatei existiert
         if not os.path.isfile(source_file):
@@ -154,53 +163,9 @@ def create_backup(source_file, backup_directory):
     except Exception as e:
         print(f"Fehler beim Erstellen des Backups: {e}")
 
-# Funktion zur Transaktionserstellung
-def create_transaction(käufer_name, TN_barcode, produkt_barcode, menge):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Käufer-ID abrufen oder neu anlegen, falls nicht vorhanden
-        cursor.execute('SELECT T_ID FROM Teilnehmer WHERE Name=?', (käufer_name,))
-        row = cursor.fetchone()
-        if row:
-            käufer_id = row[0]
-        else:
-            cursor.execute('INSERT INTO Teilnehmer (Name, TN_Barcode) VALUES (?, ?)', (käufer_name, TN_barcode))
-            käufer_id = cursor.lastrowid
-
-        # Produkt-ID abrufen
-        cursor.execute('SELECT P_ID FROM Produkt WHERE P_Barcode=?', (produkt_barcode,))
-        row = cursor.fetchone()
-        if row:
-            produkt_id = row[0]
-        else:
-            return False, f'Produkt mit Barcode "{produkt_barcode}" nicht gefunden.'
-
-        # Überprüfen, ob bereits eine Transaktion für dieses Produkt existiert
-        cursor.execute('SELECT TRANS_ID FROM Transaktion WHERE K_ID=? AND P_ID=?', (käufer_id, produkt_id))
-        existing_transaction = cursor.fetchone()
-        if existing_transaction:
-            return False, f'Es existiert bereits eine Transaktion für das Produkt "{produkt_barcode}".'
-
-        # Transaktion in d  ie Datenbank einfügen
-        datum = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        cursor.execute('INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES (?, ?, ?, ?, ?)',(käufer_id, produkt_id, 'Verkauf', menge, datum))
-
-        # Anzahl verkaufter Produkte erhöhen
-        cursor.execute('UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?', (menge, produkt_id))
-
-        conn.commit()
-        conn.close()
-        aktualisere_endkontostand()
-        return True, f'Transaktion erfolgreich eingetragen für Käufer "{käufer_name}" und Produkt "{produkt_barcode}".'
-
-    except sqlite3.Error as error:
-        return False, f'Datenbankfehler: {error}'
-    except Exception as e:
-        return False, f'Fehler: {e}'
-
 # Function to calculate the remaining balance until the end of the camp
 def genug_geld_bis_ende_von_tag(teilnehmer_id, db):
+    print("Berechne erwarteten Kontostand...")
     try:
         lager_name = Zeltlager.lager  # Example for the camp
         lager = db.execute("SELECT Zeltlager FROM Einstellungen WHERE Zeltlager = ?", (lager_name,)).fetchone()[0]
@@ -236,6 +201,7 @@ def genug_geld_bis_ende_von_tag(teilnehmer_id, db):
         return None
 
 def aktualisere_endkontostand():
+    print("Aktualisiere Endkontostand...")
     try:
         db = get_db_connection()
         # Get all participants
@@ -262,24 +228,28 @@ def aktualisere_endkontostand():
 # Routen
 @app.route('/')
 def index():
+    print('index')
     return render_template('index.html')
 
 @app.route('/update_product_dropdowns', methods=['GET'])
 def update_product_dropdowns_route():
+    print('update_product_dropdowns')
     db = Database()
     products = fetch_products(db)  # Ruft Produktbeschreibungen ab
     return jsonify({'products': products})
 
 @app.route('/add_buy', methods=['GET', 'POST'])
 def add_buy():
+    print('add_buy')
     if request.method == 'POST':
         user = request.form['TN_Barcode']
-        products = [request.form[f'P_Barcode{i}'] for i in range(1, 7) if f'P_Barcode{i}' in request.form]
+        products = [request.form[f'P_Barcode{i}'] for i in range(1, 8) if f'P_Barcode{i}' in request.form]
         
         success = submit_purchase(user, products)
         if success:
             aktualisere_endkontostand()
             print('Kauf erfolgreich hinzugefügt', 'success')
+            return redirect(url_for('buy_check', username=user, products=products))  # Parameter hinzufügen
         else:
             print('Fehler beim Hinzufügen des Kaufs', 'danger')
         return redirect(url_for('add_buy'))
@@ -288,26 +258,36 @@ def add_buy():
     IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
     return render_template('add_buy.html', IDs=IDs)
 
-@app.route('/submit_buy', methods=['POST'])
-def submit_buy():
-    if request.method == 'POST':
-        user = request.form['TN_Barcode']
-        products = [request.form[f'P_Barcode{i}'] for i in range(1, 7) if f'P_Barcode{i}' in request.form]
-        
-        success = submit_purchase(user, products)
-        if success:
-            aktualisere_endkontostand()
-            print('Kauf erfolgreich hinzugefügt', 'success')
-        else:
-            print('Fehler beim Hinzufügen des Kaufs', 'danger')
-        return redirect(url_for('add_buy'))
-    
-    db = Database()  # Stellen Sie sicher, dass db korrekt initialisiert ist
-    IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
-    return render_template('add_buy.html', IDs=IDs)
+@app.route('/buy_check')
+def buy_check():
+    username = request.args.get('username')  # Benutzername aus den URL-Parametern abrufen
+    products = request.args.getlist('products')  # Produkte aus den URL-Parametern abrufen
+    # Logik für die buy_check-Seite
+    return render_template('buy_check.html', username=username, products=products)
+
+
+
+# @app.route('/submit_buy', methods=['POST'])
+# def submit_buy():
+#     if request.method == 'POST':
+#         user = request.form['TN_Barcode']
+#         products = [request.form[f'P_Barcode{i}'] for i in range(1, 8) if f'P_Barcode{i}' in request.form]
+#         
+#         success = submit_purchase(user, products)
+#         if success:
+#             aktualisere_endkontostand()
+#             print('Kauf erfolgreich hinzugefügt', 'success')
+#         else:
+#             print('Fehler beim Hinzufügen des Kaufs', 'danger')
+#         return redirect(url_for('add_buy'))
+#     
+#     db = Database()  # Stellen Sie sicher, dass db korrekt initialisiert ist
+#     IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
+#     return render_template('add_buy.html', IDs=IDs)
 
 @app.route('/watch')
 def watch():
+    print('watch') # Debugging-Information
     conn = get_db_connection()
     cursor = conn.cursor()
     aktualisere_endkontostand()
@@ -337,6 +317,7 @@ def watch():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    print('login') # Debugging-Information
     if request.method == 'POST':
         password = request.form['password']
         if password == '1':
@@ -347,10 +328,12 @@ def login():
 
 @app.route('/admin')
 def admin():
+    print('admin') # Debugging-Information
     return render_template('admin.html')
 
 @app.route('/dblogin', methods=['GET', 'POST'])  # Hinzufügen des fehlenden Schrägstrichs
 def dblogin():
+    print('dblogin') # Debugging-Information
     if request.method == 'POST':
         passworddb = request.form['passworddb']
         if passworddb == 'FwvdDB':
@@ -361,27 +344,33 @@ def dblogin():
 
 @app.route('/db_create')
 def db_create():
+    print('db_create') # Debugging-Information
     os.system('python3 OB_DB_erstellen.py')
     return redirect(url_for('index'))
 
 @app.route('/teilnehmer')
 def teilnehmer():
+    print('teilnehmer') # Debugging-Information
     return render_template('A_TN.html')
 
 @app.route('/produkte')
 def produkte():
+    print('produkte') # Debugging-Information
     return render_template('A_Produkte.html')
 
 @app.route('/statistik')
 def statistik():
+    print('statistik') # Debugging-Information
     return render_template('A_Statistik.html')
 
 @app.route('/datenbankverwaltung')
 def datenbankverwaltung():
+    print('datenbankverwaltung') # Debugging-Information
     return render_template('A_DB.html')
 
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
+    print('add_user') # Debugging-Information
     if request.method == 'POST':
         user = request.form['user']
         # Korrektur: Überprüfen, ob 'TN_B' im Formular vorhanden ist
@@ -409,6 +398,7 @@ def add_user():
 
 @app.route('/add_fund', methods=['GET', 'POST'])
 def add_fund():
+    print('add_fund') # Debugging-Information
     if request.method == 'POST':
         user = request.form['TN_B']
         amount = float(request.form['amount'])
@@ -443,6 +433,7 @@ def add_fund():
 
 @app.route('/withdraw_fund', methods=['GET', 'POST'])
 def withdraw_fund():
+    print('withdraw_fund') # Debugging-Information
     if request.method == 'POST':
         user = request.form['user']
         amount = float(request.form['amount'])
@@ -478,6 +469,7 @@ def withdraw_fund():
 
 @app.route('/edit_user', methods=['GET', 'POST'])
 def edit_user():
+    print('edit_user') # Debugging-Information
     if request.method == 'POST':
         selected_user = request.form.get('selected_user')
         
@@ -530,6 +522,7 @@ def edit_user():
 
 @app.route('/add_product', methods=['GET', 'POST'])
 def add_product():
+    print('add_product') # Debugging-Information
     if request.method == 'POST':
         product = request.form['product']
         P_barcode = request.form['P_barcode']
@@ -549,6 +542,7 @@ def add_product():
 
 @app.route('/edit_product_prices', methods=['GET', 'POST'])
 def edit_product_prices():
+    print('edit_product_prices') # Debugging-Information
     if request.method == 'POST':
         selected_product = request.form.get('selected_product')
         action = request.form.get('action')
@@ -602,12 +596,14 @@ def edit_product_prices():
 
 @app.route('/checkout_tn')
 def checkout_tn():
+    print('checkout_tn') # Debugging-Information
     with Database() as db:
         users = db.execute_select("SELECT Name FROM Teilnehmer ORDER BY Name")
     return render_template('TN-Abfrage.html', users=[user[0] for user in users])
 
 @app.route('/checkout', methods=['POST'])
 def checkout():
+    print('checkout') # Debugging-Information
     benutzer_id = request.form['user']
     if not benutzer_id:
         print("Bitte wählen Sie einen Teilnehmer aus.", 'danger')
@@ -643,6 +639,7 @@ def checkout():
 
 @app.route('/confirm_checkout', methods=['POST'])
 def confirm_checkout():
+    print('confirm_checkout') # Debugging-Information
     benutzer_id = request.form['user']
     with Database() as db:
         db.execute_update("UPDATE Konto SET Kontostand = 0 WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE Name = ?)", (benutzer_id,))
@@ -652,6 +649,7 @@ def confirm_checkout():
 
 @app.route('/kaufstatistik')
 def create_kaufstatistik_tab():
+    print('kaufstatistik') # Debugging-Information
     try:
         with Database() as db:
             sql_query = '''SELECT Produkt.Beschreibung, SUM(Transaktion.Menge) AS Anzahl_verkauft
@@ -668,6 +666,7 @@ def create_kaufstatistik_tab():
 
 @app.route('/geld_aufteilen')
 def geld_aufteilen():
+    print('geld_aufteilen') # Debugging-Information
     conn = get_db_connection()
     kontos = conn.execute("SELECT K_ID, Kontostand FROM Konto").fetchall()
     conn.close()
@@ -696,6 +695,7 @@ def geld_aufteilen():
 
 @app.route('/backup', methods=['GET', 'POST'])
 def backup_database():
+    print('backup_database') # Debugging-Information
     if request.method == 'POST':
         # Neue Werte aus dem Formular holen
         backup_directory = request.form['backup_directory']
@@ -711,6 +711,7 @@ def backup_database():
 
 @app.route('/delete_database', methods=['GET', 'POST'])
 def delete_database():
+    print('delete_database') # Debugging-Information
     if request.method == 'POST':
         password = request.form['password']
         if password == 'IchWillDieDatenbankLöschen':
@@ -734,6 +735,7 @@ def delete_database():
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
+    print('settings') # Debugging-Information  
     conn = get_db_connection()
     
     if request.method == 'POST':
