@@ -54,4 +54,9 @@
     ```
 
 ## Passwörter
-1. **
+1. **Admin**
+   - 1
+2. **Datenbank**
+   - FwvdDB
+3. **Datenbank löschen**
+   - IchWillDieDatenbankLöschen
