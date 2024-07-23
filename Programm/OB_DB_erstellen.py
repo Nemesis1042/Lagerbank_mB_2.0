@@ -13,6 +13,7 @@ def create_database(datenbankname):
     cursor.execute('''CREATE TABLE IF NOT EXISTS Produkt (
         P_ID INTEGER PRIMARY KEY AUTOINCREMENT,
         Beschreibung VARCHAR(100),
+        P_Produktbarcode VARCHAR(50),
         Preis DECIMAL(10, 2),
         Anzahl_verkauft INT
         
@@ -24,6 +25,7 @@ def create_database(datenbankname):
     cursor.execute('''CREATE TABLE IF NOT EXISTS Teilnehmer (
         T_ID INTEGER PRIMARY KEY AUTOINCREMENT, 
         Name VARCHAR(50),
+        TN_Barcode VARCHAR(50),
         Checkout BOOLEAN DEFAULT 0
     );
     
@@ -72,38 +74,38 @@ def create_database(datenbankname):
     print("Einstellungen wurden erfolgreich erstellt!")
     print("2024")
     
-    cursor.execute('''INSERT INTO Produkt (Beschreibung, Preis, Anzahl_verkauft) 
-                      SELECT 'Medium', '0.40', '0' 
+    cursor.execute('''INSERT INTO Produkt (Beschreibung,P_Produktbarcode, Preis, Anzahl_verkauft) 
+                      SELECT 'Medium','Medium','0.40', '0' 
                       WHERE NOT EXISTS (SELECT 1 FROM Produkt WHERE Beschreibung = 'Medium')''')
     cursor.connection.commit()
     print("Medium")
     
-    cursor.execute('''INSERT INTO Produkt (Beschreibung, Preis, Anzahl_verkauft) 
-                      SELECT 'Still', '0.40', '0' 
+    cursor.execute('''INSERT INTO Produkt (Beschreibung,P_Produktbarcode, Preis, Anzahl_verkauft) 
+                      SELECT 'Still','Still', '0.40', '0' 
                       WHERE NOT EXISTS (SELECT 1 FROM Produkt WHERE Beschreibung = 'Still')''')
     cursor.connection.commit()
     print("Still")
     
-    cursor.execute('''INSERT INTO Produkt (Beschreibung, Preis, Anzahl_verkauft) 
-                      SELECT 'Cola-Mix', '0.60', '0' 
+    cursor.execute('''INSERT INTO Produkt (Beschreibung,P_Produktbarcode, Preis, Anzahl_verkauft) 
+                      SELECT 'Cola-Mix','Cola-Mix','0.60', '0' 
                       WHERE NOT EXISTS (SELECT 1 FROM Produkt WHERE Beschreibung = 'Cola-Mix')''')
     cursor.connection.commit()
     print("Cola-Mix")
     
-    cursor.execute('''INSERT INTO Produkt (Beschreibung, Preis, Anzahl_verkauft) 
-                      SELECT 'Rote-Schorle', '0.65', '0' 
+    cursor.execute('''INSERT INTO Produkt (Beschreibung,P_Produktbarcode, Preis, Anzahl_verkauft) 
+                      SELECT 'Rote-Schorle', 'Rote-Schorle','0.65', '0' 
                       WHERE NOT EXISTS (SELECT 1 FROM Produkt WHERE Beschreibung = 'Rote-Schorle')''')
     cursor.connection.commit()
     print("Rote-Schorle")
     
-    cursor.execute('''INSERT INTO Produkt (Beschreibung, Preis, Anzahl_verkauft) 
-                      SELECT 'Apfelschorle', '0.65', '0' 
+    cursor.execute('''INSERT INTO Produkt (Beschreibung,P_Produktbarcode, Preis, Anzahl_verkauft) 
+                      SELECT 'Apfelschorle','Apfelschorle','0.65', '0' 
                       WHERE NOT EXISTS (SELECT 1 FROM Produkt WHERE Beschreibung = 'Apfelschorle')''')
     cursor.connection.commit()
     print("Apfelschorle")
     
-    cursor.execute('''INSERT INTO Produkt (Beschreibung, Preis, Anzahl_verkauft) 
-                      SELECT 'ISO-Grape', '0.65', '0' 
+    cursor.execute('''INSERT INTO Produkt (Beschreibung,P_Produktbarcode, Preis, Anzahl_verkauft) 
+                      SELECT 'ISO-Grape','ISO-Grape', '0.65', '0' 
                       WHERE NOT EXISTS (SELECT 1 FROM Produkt WHERE Beschreibung = 'ISO-Grape')''')
     cursor.connection.commit()
     print("ISO-Grape")

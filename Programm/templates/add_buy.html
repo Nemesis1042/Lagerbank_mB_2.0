@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kauf hinzufügen</title>
-    <!--<link rel="stylesheet" href="/static/styles.css">-->
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <header>
@@ -44,7 +44,7 @@
             let barcodeInputs = ['P_Barcode1', 'P_Barcode2', 'P_Barcode3', 'P_Barcode4', 'P_Barcode5', 'P_Barcode6'];
             let currentIndex = 0;
             let barcodeInput = '';
-            const SPECIAL_BARCODE = 'LunaFriedich';
+            const SPECIAL_BARCODE = 'Brake';
 
             // Hide all product barcode input fields and their labels initially
             barcodeInputs.forEach(id => {
@@ -71,8 +71,11 @@
                         // Set the current input field with the scanned barcode value
                         document.getElementById(barcodeInputs[currentIndex]).value = barcodeInput;
                         if (barcodeInput === SPECIAL_BARCODE) {
+                            document.getElementById(barcodeInputs[currentIndex]).value = ''; // Clear the special barcode
+                            // Submit the form if the special barcode is scanned
                             document.getElementById('buyForm').submit();
-                        } else {
+                        } 
+                        else {
                             barcodeInput = ''; // Reset barcode input
                             currentIndex++;
 

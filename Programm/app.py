@@ -45,12 +45,12 @@ def get_products_from_db():
 def get_db():
     return sqlite3.connect(app.config['SQLALCHEMY_DATABASE_URI'].split('///')[-1])
 
-def submit_purchase(user, product, quantity):
+def submit_purchase(user, products, quantity = 1):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         # Teilnehmer-ID und Kontostand abrufen
-        cursor.execute("SELECT T_ID FROM Teilnehmer WHERE Name = ?", (user,))
+        cursor.execute("SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?", (user,))
         user_row = cursor.fetchone()
         if user_row is None:
             print("Teilnehmer nicht gefunden!")
@@ -63,33 +63,40 @@ def submit_purchase(user, product, quantity):
             print("Konto nicht gefunden!")
             return False
         Kontostand = account_row['Kontostand']
+        Kontostand = round(Kontostand, 2)
         
         # Produktpreis und Produkt-ID abrufen
-        cursor.execute("SELECT P_ID, Preis FROM Produkt WHERE Beschreibung = ?", (product,))
-        product_row = cursor.fetchone()
-        if product_row is None:
-            print("Produkt nicht gefunden!")
-            return False
-        P_ID = product_row['P_ID']
-        Preis = product_row['Preis']
-        
-        # Prüfen, ob genug Guthaben vorhanden ist
-        total_price = quantity * Preis
-        if total_price > Kontostand:
-            print("Nicht genügend Guthaben!")
-            return False
-        
-        # Transaktion einfügen
-        cursor.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT K_ID FROM Konto WHERE T_ID = ?), ?, ?, ?, ?)",
-                       (T_ID, P_ID, 'Kauf', quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        
-        # Konto- und Produkt-Updates durchführen
-        cursor.execute("UPDATE Konto SET Kontostand = Kontostand - ? WHERE T_ID = ?", (total_price, T_ID))
-        cursor.execute("UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?", (quantity, P_ID))
-        
-        # Änderungen speichern
-        conn.commit()
-        print("Transaktion hinzugefügt!")
+        for product in products:
+            if product == '':  # Skip empty products
+                continue
+            cursor.execute("SELECT P_ID, Preis FROM Produkt WHERE P_Produktbarcode = ?", (product,))
+            product_row = cursor.fetchone()
+            if product_row is None:
+                print("Produkt nicht gefunden!")
+                return False
+            P_ID = product_row['P_ID']
+            Preis = product_row['Preis']
+            
+            # Prüfen, ob genug Guthaben vorhanden ist
+            total_price = quantity* Preis
+            if total_price > Kontostand:
+                print("Nicht genügend Guthaben!")
+                return False
+            
+            new_Kontostand = Kontostand - total_price
+            new_Kontostand = round(new_Kontostand, 2)
+            
+            # Transaktion einfügen
+            cursor.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT K_ID FROM Konto WHERE T_ID = ?), ?, ?, ?, ?)",
+                        (T_ID, P_ID, 'Kauf', quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            
+            # Konto- und Produkt-Updates durchführen
+            cursor.execute("UPDATE Konto SET Kontostand =  ? WHERE T_ID = ?", (new_Kontostand, T_ID))
+            cursor.execute("UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?", (quantity, P_ID))
+            
+            # Änderungen speichern
+            conn.commit()
+            print("Transaktion hinzugefügt!")
         return True
     except Exception as e:
         print(f"Fehler beim Hinzufügen der Transaktion: {e}")
@@ -148,7 +155,7 @@ def create_backup(source_file, backup_directory):
         print(f"Fehler beim Erstellen des Backups: {e}")
 
 # Funktion zur Transaktionserstellung
-def create_transaction(käufer_name, produkt_barcode, menge):
+def create_transaction(käufer_name, TN_barcode, produkt_barcode, menge):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -158,7 +165,7 @@ def create_transaction(käufer_name, produkt_barcode, menge):
         if row:
             käufer_id = row[0]
         else:
-            cursor.execute('INSERT INTO Teilnehmer (Name, TN_Barcode) VALUES (?, ?)', (käufer_name, käufer_name))
+            cursor.execute('INSERT INTO Teilnehmer (Name, TN_Barcode) VALUES (?, ?)', (käufer_name, TN_barcode))
             käufer_id = cursor.lastrowid
 
         # Produkt-ID abrufen
@@ -175,7 +182,7 @@ def create_transaction(käufer_name, produkt_barcode, menge):
         if existing_transaction:
             return False, f'Es existiert bereits eine Transaktion für das Produkt "{produkt_barcode}".'
 
-        # Transaktion in die Datenbank einfügen
+        # Transaktion in d  ie Datenbank einfügen
         datum = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute('INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES (?, ?, ?, ?, ?)',(käufer_id, produkt_id, 'Verkauf', menge, datum))
 
@@ -238,6 +245,7 @@ def aktualisere_endkontostand():
             tn_id = tn[0]
             # Update end balance for each participant
             erwarteter_kontostand = genug_geld_bis_ende_von_tag(tn_id, db)
+            erwarteter_kontostand = round(erwarteter_kontostand, 2) if erwarteter_kontostand is not None else None  
             if erwarteter_kontostand is not None:
                 db.execute("UPDATE Konto SET Endkontostand = ? WHERE T_ID = ?", (erwarteter_kontostand, tn_id))
                 print(f"Endkontostand für TN {tn_id} aktualisiert.")
@@ -265,34 +273,38 @@ def update_product_dropdowns_route():
 @app.route('/add_buy', methods=['GET', 'POST'])
 def add_buy():
     if request.method == 'POST':
-        user = request.form['user']
-        product = request.form['product']
-        quantity = int(request.form['quantity'])
-        success = submit_purchase(user, product, quantity)
+        user = request.form['TN_Barcode']
+        products = [request.form[f'P_Barcode{i}'] for i in range(1, 7) if f'P_Barcode{i}' in request.form]
+        
+        success = submit_purchase(user, products)
         if success:
             aktualisere_endkontostand()
             print('Kauf erfolgreich hinzugefügt', 'success')
         else:
             print('Fehler beim Hinzufügen des Kaufs', 'danger')
         return redirect(url_for('add_buy'))
-    users = get_users_from_db()
-    products = get_products_from_db()
+    
     db = Database()  # Stellen Sie sicher, dass db korrekt initialisiert ist
     IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
-    return render_template('add_buy.html', users=users, products=products, IDs=IDs)
+    return render_template('add_buy.html', IDs=IDs)
 
 @app.route('/submit_buy', methods=['POST'])
 def submit_buy():
-    user = request.form['user']
-    product = request.form['product']
-    quantity = int(request.form['quantity'])
-    success = submit_purchase(user, product, quantity)
-    if success:
+    if request.method == 'POST':
+        user = request.form['TN_Barcode']
+        products = [request.form[f'P_Barcode{i}'] for i in range(1, 7) if f'P_Barcode{i}' in request.form]
         
-        print('Purchase submitted successfully', 'success')
-    else:
-        print('Error submitting purchase', 'danger')
-    return redirect(url_for('index'))
+        success = submit_purchase(user, products)
+        if success:
+            aktualisere_endkontostand()
+            print('Kauf erfolgreich hinzugefügt', 'success')
+        else:
+            print('Fehler beim Hinzufügen des Kaufs', 'danger')
+        return redirect(url_for('add_buy'))
+    
+    db = Database()  # Stellen Sie sicher, dass db korrekt initialisiert ist
+    IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
+    return render_template('add_buy.html', IDs=IDs)
 
 @app.route('/watch')
 def watch():
@@ -372,6 +384,11 @@ def datenbankverwaltung():
 def add_user():
     if request.method == 'POST':
         user = request.form['user']
+        # Korrektur: Überprüfen, ob 'TN_B' im Formular vorhanden ist
+        TN_Barocde = request.form.get('TN_B', None)  # Verwenden von get() um Fehler zu vermeiden
+        if TN_Barocde is None:
+            print('Fehler: TN_B Barcode fehlt!', 'danger')
+            return redirect(url_for('add_user'))  # Umleitung bei fehlendem Barcode
         amount = float(request.form['amount'])
         conn = get_db_connection()
         cur = conn.cursor()
@@ -379,7 +396,7 @@ def add_user():
         if cur.fetchone():
             print('Benutzer existiert bereits!', 'danger')
         else:
-            cur.execute("INSERT INTO Teilnehmer (Name) VALUES (?)", (user,))
+            cur.execute("INSERT INTO Teilnehmer (Name, TN_Barcode) VALUES (?,?)", (user,TN_Barocde,))
             t_id = cur.execute("SELECT T_ID FROM Teilnehmer WHERE Name = ?", (user,)).fetchone()[0]
             cur.execute("INSERT INTO Konto (Einzahlung, Kontostand, Eröffnungsdatum, T_ID) VALUES (?, ?, ?, ?)",
                         (amount, amount, datetime.now().strftime("%d.%m.%Y"), t_id))
@@ -393,23 +410,23 @@ def add_user():
 @app.route('/add_fund', methods=['GET', 'POST'])
 def add_fund():
     if request.method == 'POST':
-        user = request.form['user']
+        user = request.form['TN_B']
         amount = float(request.form['amount'])
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT Name FROM Teilnehmer WHERE Name = ?", (user,))
+        cur.execute("SELECT Name FROM Teilnehmer WHERE TN_Barcode = ?", (user,))
         if not cur.fetchone():
             print('Benutzer nicht gefunden!', 'danger')
         else:
             
-            user_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.Name = ?", (user,)).fetchone()
-            user_einzahlung = cur.execute("SELECT Einzahlung FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.Name = ?", (user,)).fetchone()
+            user_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.TN_Barcode = ?", (user,)).fetchone()
+            user_einzahlung = cur.execute("SELECT Einzahlung FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.TN_Barcode = ?", (user,)).fetchone()
             if user_balance:
                 new_balance = user_balance['Kontostand'] + amount
-                cur.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE Name = ?)", (new_balance, user))
-                cur.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT T_ID FROM Teilnehmer WHERE Name = ?), 0, 'Einzahlung', ?, ?)", (user, amount, datetime.now().strftime("%d.%m.%Y %H:%M:%S")))
+                cur.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?)", (new_balance, user))
+                cur.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?), 0, 'Einzahlung', ?, ?)", (user, amount, datetime.now().strftime("%d.%m.%Y %H:%M:%S")))
                 new_einzahlung = user_einzahlung['Einzahlung'] + amount
-                cur.execute("UPDATE Konto SET Einzahlung = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE Name = ?)", (new_einzahlung, user)) # Update the deposit
+                cur.execute("UPDATE Konto SET Einzahlung = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?)", (new_einzahlung, user)) # Update the deposit
                 conn.commit()
                 print(f'{amount} € erfolgreich hinzugefügt.', 'success')
             else:
@@ -431,19 +448,19 @@ def withdraw_fund():
         amount = float(request.form['amount'])
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT Name FROM Teilnehmer WHERE Name = ?", (user,))
+        cur.execute("SELECT Name FROM Teilnehmer WHERE TN_Barcode = ?", (user,))
         if not cur.fetchone():
             print('Benutzer nicht gefunden!', 'danger')
         else:
-            current_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.Name = ?", (user,)).fetchone()
+            current_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.TN_Barcode = ?", (user,)).fetchone()
             current_balance = current_balance['Kontostand'] if current_balance else 0
-            user_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.Name = ?", (user,)).fetchone()
+            user_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.TN_Barcode = ?", (user,)).fetchone()
             if user_balance:
                 if amount > user_balance['Kontostand']:
                     print('Unzureichendes Guthaben!', 'danger')
                 else:
                     new_balance = user_balance['Kontostand'] - amount
-                    cur.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE Name = ?)", (new_balance, user))
+                    cur.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?)", (new_balance, user))
                     cur.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT T_ID FROM Teilnehmer WHERE Name = ?), 0, 'Auszahlung', ?, ?)", (user, amount, datetime.now().strftime("%d.%m.%Y %H:%M:%S")))
                     conn.commit()
                     print(f'{amount} € erfolgreich abgehoben.', 'success')
