@@ -152,8 +152,6 @@ def create_transaction(käufer_name, produkt_barcode, menge):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-       
-
         # Käufer-ID abrufen oder neu anlegen, falls nicht vorhanden
         cursor.execute('SELECT T_ID FROM Teilnehmer WHERE Name=?', (käufer_name,))
         row = cursor.fetchone()
@@ -179,8 +177,7 @@ def create_transaction(käufer_name, produkt_barcode, menge):
 
         # Transaktion in die Datenbank einfügen
         datum = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        cursor.execute('INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES (?, ?, ?, ?, ?)',
-                       (käufer_id, produkt_id, 'Verkauf', menge, datum))
+        cursor.execute('INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES (?, ?, ?, ?, ?)',(käufer_id, produkt_id, 'Verkauf', menge, datum))
 
         # Anzahl verkaufter Produkte erhöhen
         cursor.execute('UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?', (menge, produkt_id))
@@ -751,7 +748,6 @@ def settings():
     # Render settings page with form fields
     
     return render_template('settings.html', first_day=first_day, lager_dauer=lager_dauer, last_day=last_day, today=heute)
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

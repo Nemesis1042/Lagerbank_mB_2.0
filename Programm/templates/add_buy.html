@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kauf hinzufügen</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <!--<link rel="stylesheet" href="/static/styles.css">-->
 </head>
 <body>
     <header>
@@ -13,7 +13,6 @@
             <ul>
                 <li><a href="/">Startseite</a></li>
                 <li><a href="/add_buy">Kauf hinzufügen</a></li>
-                <!--<li><a href="/watch">Übersicht</a></li>-->
                 <li><a href="#" onclick="history.back();">Zurück</a></li>
             </ul>
         </nav>
@@ -22,32 +21,74 @@
         <div>
             <h1>Kauf hinzufügen</h1>
             <form id="buyForm" action="/submit_buy" method="post">
-                <label for="user">Teilnehmer wählen:</label>
-                <select id="user" name="user">
-                    {% for user in users %}
-                    <option value="{{ user }}">{{ user }}</option>
-                    {% endfor %}
-                </select>
-                <!--<div id="numberMatrix" style="display: flex; flex-wrap: wrap; justify-content: center;">
-                    {% for user in users %}
-                        <button type="button" onclick="selectUser('{{ user.id }}')" style="margin: 5px;">{{ user.name }}</button>
-                    {% else %}
-                        <p>Keine Teilnehmer verfügbar.</p>
-                    {% endfor %}
-                </div>-->
-                <label for="product">Produkt wählen:</label>
-                <select id="product" name="product">
-                    {% for product in products %}
-                    <option value="{{ product }}">{{ product }}</option>
-                    {% endfor %}
-                </select>
-                <label for="quantity">Menge wählen:</label>
-                <input type="number" id="quantity" name="quantity" min="1" max="6" value="1">
-                <input type="hidden" id="TN_Barcode" name="TN_Barcode">
+                <label for="TN_Barcode">Teilnehmerbarcode:</label>
+                <input id="TN_Barcode" name="TN_Barcode" autofocus>
+                <label for="P_Barcode1" style="display:none;">Produktbarcode 1:</label>
+                <input id="P_Barcode1" name="P_Barcode1" style="display:none;">
+                <label for="P_Barcode2" style="display:none;">Produktbarcode 2:</label>
+                <input id="P_Barcode2" name="P_Barcode2" style="display:none;">
+                <label for="P_Barcode3" style="display:none;">Produktbarcode 3:</label>
+                <input id="P_Barcode3" name="P_Barcode3" style="display:none;">
+                <label for="P_Barcode4" style="display:none;">Produktbarcode 4:</label>
+                <input id="P_Barcode4" name="P_Barcode4" style="display:none;">
+                <label for="P_Barcode5" style="display:none;">Produktbarcode 5:</label>
+                <input id="P_Barcode5" name="P_Barcode5" style="display:none;">
+                <label for="P_Barcode6" style="display:none;">Produktbarcode 6:</label>
+                <input id="P_Barcode6" name="P_Barcode6" style="display:none;">
                 <input type="submit" value="Kauf hinzufügen">
             </form>
         </div>
     </main>
-   
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            let barcodeInputs = ['P_Barcode1', 'P_Barcode2', 'P_Barcode3', 'P_Barcode4', 'P_Barcode5', 'P_Barcode6'];
+            let currentIndex = 0;
+            let barcodeInput = '';
+            const SPECIAL_BARCODE = 'LunaFriedich';
+
+            // Hide all product barcode input fields and their labels initially
+            barcodeInputs.forEach(id => {
+                document.getElementById(id).style.display = 'none';
+                document.querySelector(`label[for=${id}]`).style.display = 'none';
+            });
+
+            // Show the first product barcode input field
+            document.getElementById(barcodeInputs[currentIndex]).style.display = 'block';
+            document.querySelector(`label[for=${barcodeInputs[currentIndex]}]`).style.display = 'block';
+
+            // Listen for keypress events on the document
+            document.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+
+                    if (currentIndex === 0 && e.target.id === 'TN_Barcode') {
+                        // Move focus to the first product barcode input field
+                        document.getElementById(barcodeInputs[currentIndex]).style.display = 'block';
+                        document.querySelector(`label[for=${barcodeInputs[currentIndex]}]`).style.display = 'block';
+                        document.getElementById(barcodeInputs[currentIndex]).focus();
+                        barcodeInput = ''; // Reset barcode input
+                    } else {
+                        // Set the current input field with the scanned barcode value
+                        document.getElementById(barcodeInputs[currentIndex]).value = barcodeInput;
+                        if (barcodeInput === SPECIAL_BARCODE) {
+                            document.getElementById('buyForm').submit();
+                        } else {
+                            barcodeInput = ''; // Reset barcode input
+                            currentIndex++;
+
+                            if (currentIndex < barcodeInputs.length) {
+                                document.getElementById(barcodeInputs[currentIndex]).style.display = 'block';
+                                document.querySelector(`label[for=${barcodeInputs[currentIndex]}]`).style.display = 'block';
+                                document.getElementById(barcodeInputs[currentIndex]).focus();
+                            }
+                        }
+                    }
+                } else {
+                    // Append the character to the barcode input
+                    barcodeInput += e.key;
+                }
+            });
+        });
+    </script>
 </body>
 </html>
