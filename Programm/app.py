@@ -112,6 +112,120 @@ def submit_purchase(user, products, quantity = 1):
 def fetch_users(db: Database) -> List[str]:
     print('fetch_users') # Debugging-Information
     users = [user[0] for user in db.execute_select("SELECT Name FROM Teilnehmer ORDER BY Name")]  # Ruft Benutzernamen aus der Datenbank ab
+# Standard-Bibliotheken
+import os   # Für Dateioperationen
+import sqlite3  # Für Datenbankzugriff
+from datetime import datetime # Für Zeitstempel
+
+# Externe Bibliotheken
+import subprocess #
+import numpy as np  #
+import pandas as pd     # Für Datenverarbeitung und -analyse
+import shutil   # Für Dateioperationen
+from typing import List, Tuple, Callable    # Für Typenangaben
+
+# Flask und zugehörige Erweiterungen
+from flask import Flask, Response, render_template, request, redirect, url_for, flash, jsonify  # Für Webanwendungen
+# Benutzerdefinierte Module
+from database import Database, get_db_connection    # Für Datenbankzugriff
+
+# Konfigurationen
+from config import db_backup    # Für Backup-Konfiguration
+from config import Zeltlager    # Für Lager-Konfiguration
+
+# Initialisierung der Flask-App
+app = Flask(__name__)
+os.system('python3 OB_DB_erstellen.py')
+app.config.from_object('config.Config')
+
+
+# Funktionen
+def get_users_from_db():
+    print('get_users_from_db') # Debugging-Information
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT Name FROM Teilnehmer ORDER BY Name")
+    users = cursor.fetchall()
+    conn.close()
+    return [user['Name'] for user in users]
+
+def get_products_from_db():
+    print('get_products_from_db') # Debugging-Information
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT Beschreibung FROM Produkt")
+    products = cursor.fetchall()
+    conn.close()
+    return [product['Beschreibung'] for product in products]
+
+def get_db():
+    print('get_db') # Debugging-Information
+    return sqlite3.connect(app.config['SQLALCHEMY_DATABASE_URI'].split('///')[-1])
+
+def submit_purchase(user, products, quantity = 1):
+    print('submit_purchase') # Debugging-Information
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Teilnehmer-ID und Kontostand abrufen
+        cursor.execute("SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?", (user,))
+        user_row = cursor.fetchone()
+        if user_row is None:
+            print("Teilnehmer nicht gefunden!")
+            return False
+        T_ID = user_row['T_ID']
+        
+        cursor.execute("SELECT Kontostand FROM Konto WHERE T_ID = ?", (T_ID,))
+        account_row = cursor.fetchone()
+        if account_row is None:
+            print("Konto nicht gefunden!")
+            return False
+        Kontostand = account_row['Kontostand']
+        Kontostand = round(Kontostand, 2)
+        
+        # Produktpreis und Produkt-ID abrufen
+        for product in products:
+            if product == '':  # Skip empty products
+                continue
+            cursor.execute("SELECT P_ID, Preis FROM Produkt WHERE P_Produktbarcode = ?", (product,))
+            product_row = cursor.fetchone()
+            if product_row is None:
+                print("Produkt nicht gefunden!")
+                return False
+            P_ID = product_row['P_ID']
+            Preis = product_row['Preis']
+            
+            # Prüfen, ob genug Guthaben vorhanden ist
+            total_price = quantity* Preis
+            if total_price > Kontostand:
+                print("Nicht genügend Guthaben!")
+                return False
+            
+            new_Kontostand = Kontostand - total_price
+            new_Kontostand = round(new_Kontostand, 2)
+            
+            # Transaktion einfügen
+            cursor.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT K_ID FROM Konto WHERE T_ID = ?), ?, ?, ?, ?)",
+                        (T_ID, P_ID, 'Kauf', quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            
+            # Konto- und Produkt-Updates durchführen
+            cursor.execute("UPDATE Konto SET Kontostand =  ? WHERE T_ID = ?", (new_Kontostand, T_ID))
+            cursor.execute("UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?", (quantity, P_ID))
+            
+            # Änderungen speichern
+            conn.commit()
+            print("Transaktion hinzugefügt!")
+            return redirect('buy_check.html')
+        return True
+    except Exception as e:
+        print(f"Fehler beim Hinzufügen der Transaktion: {e}")
+        return False
+    finally:
+        conn.close()
+
+def fetch_users(db: Database) -> List[str]:
+    print('fetch_users') # Debugging-Information
+    users = [user[0] for user in db.execute_select("SELECT Name FROM Teilnehmer ORDER BY Name")]  # Ruft Benutzernamen aus der Datenbank ab
     return users
 
 def fetch_products(db: Database) -> List[str]:
@@ -141,7 +255,9 @@ def kontostand_in_geld(kontostand):
         zwischenstand -= count * denom
     return counts
 
-def create_backup(source_file, backup_directory):
+def create_backup(source_file, backup_directory): 
+    source_file = db_backup.source_file
+    backup_directory = db_backup.backup_directory
     print("Erstelle Backup...") # Debugging-Information
     try:
         # Prüfen, ob die Quelldatei existiert
@@ -160,6 +276,8 @@ def create_backup(source_file, backup_directory):
         shutil.copy2(source_file, backup_file)
 
         print(f"Backup erfolgreich erstellt: {backup_file}")
+        
+        return redirect(url_for("backup"))
     except Exception as e:
         print(f"Fehler beim Erstellen des Backups: {e}")
 
@@ -684,19 +802,27 @@ def geld_aufteilen():
 
 @app.route('/backup', methods=['GET', 'POST'])
 def backup_database():
-    print('backup_database') # Debugging-Information
-    if request.method == 'POST':
-        # Neue Werte aus dem Formular holen
-        backup_directory = request.form['backup_directory']
+    print('backup_database')  # Debugging-Information
+    
+    # Set default backup directory
+    backup_directory = app.config.get('BACKUP_DIRECTORY', '"/home/arkatosh/Documents/CVJM/Bula/Lagerbank"')
 
-        # Konfigurationswert aktualisieren
-        app.config['BACKUP_DIRECTORY'] = backup_directory
+    if request.method == 'POST':
+        # Get new value from the form
+        new_backup_directory = request.form['backup_directory']
+
+        # Update configuration value
+        app.config['BACKUP_DIRECTORY'] = new_backup_directory
+
+        source_file = db_backup.source_file
         
-        #Backup durchführen
-        create_backup(db_backup.source_file, db_backup.backup_directory)
-        
+        # Perform the backup with the new directory
+        create_backup(source_file, new_backup_directory)
+
         return redirect(url_for('backup_database'))
-    return render_template('backup.html', backup_directory=db_backup.backup_directory)
+    
+    return render_template('backup.html', backup_directory=backup_directory)
+
 
 @app.route('/delete_database', methods=['GET', 'POST'])
 def delete_database():
