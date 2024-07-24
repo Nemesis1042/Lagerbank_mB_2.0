@@ -21,7 +21,7 @@ from config import Zeltlager    # Für Lager-Konfiguration
 
 # Initialisierung der Flask-App
 app = Flask(__name__)
-os.system('python3 OB_DB_erstellen.py')
+os.system('python OB_DB_erstellen.py')
 app.config.from_object('config.Config')
 
 
@@ -135,7 +135,7 @@ from config import Zeltlager    # Für Lager-Konfiguration
 
 # Initialisierung der Flask-App
 app = Flask(__name__)
-os.system('python3 OB_DB_erstellen.py')
+os.system('python Lagerbank_mB/Programm/OB_DB_erstellen.py')
 app.config.from_object('config.Config')
 
 
@@ -144,7 +144,7 @@ def get_users_from_db():
     print('get_users_from_db') # Debugging-Information
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT Name FROM Teilnehmer ORDER BY Name")
+    cursor.execute("SELECT Name FROM Teilnehmer ORDER BY T_ID")
     users = cursor.fetchall()
     conn.close()
     return [user['Name'] for user in users]
@@ -225,7 +225,7 @@ def submit_purchase(user, products, quantity = 1):
 
 def fetch_users(db: Database) -> List[str]:
     print('fetch_users') # Debugging-Information
-    users = [user[0] for user in db.execute_select("SELECT Name FROM Teilnehmer ORDER BY Name")]  # Ruft Benutzernamen aus der Datenbank ab
+    users = [user[0] for user in db.execute_select("SELECT Name FROM Teilnehmer ORDER BY T_ID")]  # Ruft Benutzernamen aus der Datenbank ab
     return users
 
 def fetch_products(db: Database) -> List[str]:
@@ -413,7 +413,7 @@ def watch():
         JOIN Konto ON Teilnehmer.T_ID = Konto.T_ID
         LEFT JOIN Transaktion ON Konto.K_ID = Transaktion.K_ID
         GROUP BY Teilnehmer.T_ID, Teilnehmer.Name, Konto.Einzahlung, ROUND(Konto.Kontostand, 2)
-        ORDER BY Teilnehmer.Name;
+        ORDER BY Teilnehmer.T_ID;
     """
     result = cursor.execute(sql_query).fetchall()
     conn.close()
@@ -450,7 +450,7 @@ def dblogin():
 @app.route('/db_create')
 def db_create():
     print('db_create') # Debugging-Information
-    os.system('python3 OB_DB_erstellen.py')
+    os.system('python Lagerbank_mB/Programm/OB_DB_erstellen.py')
     return redirect(url_for('index'))
 
 @app.route('/teilnehmer')

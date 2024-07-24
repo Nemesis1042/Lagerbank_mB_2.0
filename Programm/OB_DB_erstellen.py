@@ -17,9 +17,28 @@ def create_database(datenbankname):
         Preis DECIMAL(10, 2),
         Anzahl_verkauft INT
         
-    );
-    
+    );    
     ''')
+    cursor.connection.commit()
+    # Tabelle "Produkt" erstellen
+    cursor.execute('''CREATE TABLE IF NOT EXISTS Produkt (
+        P_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Beschreibung VARCHAR(100),
+        P_Produktbarcode VARCHAR(50),
+        Preis DECIMAL(10, 2),
+        Anzahl_verkauft INT
+    );
+    ''')
+    cursor.connection.commit()
+    # Tabelle "P_Barcode" erstellen
+    cursor.execute('''CREATE TABLE IF NOT EXISTS P_Barcode(
+        Barcode_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        P_ID INTEGER,
+        Barcode VARCHAR(50),
+        FOREIGN KEY (P_ID) REFERENCES Produkt(P_ID)
+    );
+    ''')
+    
     cursor.connection.commit()
     # Tabelle "Teilnehmer" erstellen
     cursor.execute('''CREATE TABLE IF NOT EXISTS Teilnehmer (
