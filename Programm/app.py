@@ -113,10 +113,9 @@ def fetch_users(db: Database) -> List[str]:
     users = [user[0] for user in db.execute_select("SELECT Name FROM Teilnehmer ORDER BY T_ID")]  # Ruft Benutzernamen aus der Datenbank ab
     return users
 
-def fetch_products(db: Database) -> List[str]:
-    print('fetch_products') # Debugging-Information
-    products = [product[0] for product in db.execute_select("SELECT Beschreibung FROM Produkt ORDER BY Preis")]  # Ruft Produktbeschreibungen aus der Datenbank ab
-    return products
+def fetch_products(db: Database):
+    query = "SELECT Beschreibung FROM Produkt ORDER BY Preis"
+    return [row[0] for row in db.execute_select(query)]
 
 def fetch_transactions(db: Database, user_id: int) -> List[Tuple]:
     print('fetch_transactions') # Debugging-Information
@@ -228,19 +227,16 @@ def aktualisere_endkontostand():
     finally:
         db.close()
         
-def barcode_exists(db, barcode):
-    cursor = db.execute("SELECT 1 FROM Produkt_Barcode WHERE Barcode = ?", (barcode,))
-    return cursor.fetchone() is not None
+def barcode_exists(db: Database, barcode: str):
+    query = "SELECT 1 FROM P_Barcode WHERE Barcode = ?"
+    return bool(db.execute_select(query, (barcode,)))
 
-def add_barcode_to_product(db, product, barcode):
+def add_barcode_to_product(db: Database, product: str, barcode: str):
     try:
-        db.execute(
-            "INSERT INTO Produkt_Barcode (P_ID, Barcode) SELECT P_ID, ? FROM Produkt WHERE Beschreibung = ?",
-            (barcode, product)
-        )
-        db.commit()
+        query = "INSERT INTO P_Barcode (P_ID, Barcode) SELECT P_ID, ? FROM Produkt WHERE Beschreibung = ?"
+        db.execute_insert(query, (barcode, product))
         return True
-    except sqlite3.Error as e:
+    except Exception as e:
         return str(e)
 
 
@@ -439,26 +435,26 @@ def add_fund():
 
 @app.route('/add_barcode', methods=['GET', 'POST'])
 def add_barcode():
-    db = get_db_connection()
-    products = fetch_products(db)
-    
-    if request.method == 'POST':
-        product = request.form['product']
-        barcode = request.form['barcode']
+    with Database() as db:
+        products = fetch_products(db)
         
-        if product not in products:
-            print('Produkt nicht gefunden!', 'error')
-        elif barcode_exists(db, barcode):
-            print('Barcode bereits vorhanden!', 'error')
-        else:
-            result = add_barcode_to_product(db, product, barcode)
-            if result is True:
-                print('Erfolg: Barcode erfolgreich hinzugefügt.', 'success')
+        if request.method == 'POST':
+            product = request.form['product']
+            barcode = request.form['barcode']
+            
+            if product not in products:
+                flash('Produkt nicht gefunden!', 'error')
+            elif barcode_exists(db, barcode):
+                flash('Barcode bereits vorhanden!', 'error')
             else:
-                print(f'Fehler beim Hinzufügen des Barcodes: {result}', 'error')
-        return redirect(url_for('add_barcode'))
-    
-    return render_template('add_barcode.html', products=products)
+                result = add_barcode_to_product(db, product, barcode)
+                if result is True:
+                    flash('Erfolg: Barcode erfolgreich hinzugefügt.', 'success')
+                else:
+                    flash(f'Fehler beim Hinzufügen des Barcodes: {result}', 'error')
+            return redirect(url_for('add_barcode'))
+        
+        return render_template('add_barcode_to_P.html', products=products)
 
 @app.route('/withdraw_fund', methods=['GET', 'POST'])
 def withdraw_fund():
