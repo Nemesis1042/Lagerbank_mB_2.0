@@ -231,13 +231,6 @@ def barcode_exists(db: Database, barcode: str):
     query = "SELECT 1 FROM P_Barcode WHERE Barcode = ?"
     return bool(db.execute_select(query, (barcode,)))
 
-def add_barcode_to_product(db: Database, product: str, barcode: str):
-    try:
-        query = "INSERT INTO P_Barcode (P_ID, Barcode) SELECT P_ID, ? FROM Produkt WHERE Beschreibung = ?"
-        db.execute_insert(query, (barcode, product))
-        return True
-    except Exception as e:
-        return str(e)
 
 
 # Routen
@@ -395,7 +388,7 @@ def add_user():
             conn.commit()
             print('Benutzer erfolgreich hinzugefügt.', 'success')
         conn.close()
-        return redirect(url_for('admin'))
+        return redirect(url_for('teilnehmer'))
     return render_template('add_user.html')
 
 @app.route('/add_fund', methods=['GET', 'POST'])
@@ -432,29 +425,6 @@ def add_fund():
         users = [row[0] for row in cur.fetchall()]
         conn.close()
         return render_template('add_fund.html', users=users)
-
-@app.route('/add_barcode', methods=['GET', 'POST'])
-def add_barcode():
-    with Database() as db:
-        products = fetch_products(db)
-        
-        if request.method == 'POST':
-            product = request.form['product']
-            barcode = request.form['barcode']
-            
-            if product not in products:
-                flash('Produkt nicht gefunden!', 'error')
-            elif barcode_exists(db, barcode):
-                flash('Barcode bereits vorhanden!', 'error')
-            else:
-                result = add_barcode_to_product(db, product, barcode)
-                if result is True:
-                    flash('Erfolg: Barcode erfolgreich hinzugefügt.', 'success')
-                else:
-                    flash(f'Fehler beim Hinzufügen des Barcodes: {result}', 'error')
-            return redirect(url_for('add_barcode'))
-        
-        return render_template('add_barcode_to_P.html', products=products)
 
 @app.route('/withdraw_fund', methods=['GET', 'POST'])
 def withdraw_fund():
@@ -571,7 +541,9 @@ def edit_product_prices():
     if request.method == 'POST':
         selected_product = request.form.get('selected_product')
         action = request.form.get('action')
-        if action == 'update':
+        
+        
+        if action == 'update': # Aktualisieren des Produktpreises
             new_price_str = request.form.get('new_price')
             if new_price_str:
                 try:
@@ -581,7 +553,7 @@ def edit_product_prices():
                     return redirect(url_for('edit_product_prices'))
             else:
                 new_price = None
-            if not selected_product:
+            if not selected_product: 
                 print('Bitte wählen Sie ein Produkt aus.', 'danger')
                 return redirect(url_for('edit_product_prices'))
             try:
@@ -595,7 +567,24 @@ def edit_product_prices():
                 print(f'Fehler: {e}', 'danger')
             finally:
                 conn.close()
-        elif action == 'delete':
+                
+        elif action == 'update_barcode': # Aktualisieren des Barcodes
+            new_barcode = request.form.get('new_barcode')
+            if not new_barcode:
+                print('Bitte geben Sie einen neuen Barcode ein.', 'danger')
+                return redirect(url_for('edit_product_prices'))
+            try:
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute("UPDATE Produkt SET P_Produktbarcode = ? WHERE Beschreibung = ?", (new_barcode, selected_product))
+                conn.commit()
+                print('Barcode erfolgreich aktualisiert.', 'success')
+            except Exception as e:
+                print(f'Fehler: {e}', 'danger')
+            finally:
+                conn.close()
+                
+        elif action == 'delete': # Löschen des Produkts
             if not selected_product:
                 print('Bitte wählen Sie ein Produkt aus.', 'danger')
                 return redirect(url_for('edit_product_prices'))
@@ -821,4 +810,4 @@ def settings():
     return render_template('settings.html', first_day=first_day, lager_dauer=lager_dauer, last_day=last_day, today=heute, lagername=lagername)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)
