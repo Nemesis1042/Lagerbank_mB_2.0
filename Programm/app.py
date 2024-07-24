@@ -67,7 +67,7 @@ def submit_purchase(user, products, quantity = 1):
             return False
         Kontostand = account_row['Kontostand']
         Kontostand = round(Kontostand, 2)
-        
+        print(products)
         # Produktpreis und Produkt-ID abrufen
         for product in products:
             if product == '':  # Skip empty products
@@ -81,7 +81,7 @@ def submit_purchase(user, products, quantity = 1):
             Preis = product_row['Preis']
             
             # Prüfen, ob genug Guthaben vorhanden ist
-            total_price = quantity* Preis
+            total_price = quantity * Preis
             if total_price > Kontostand:
                 print("Nicht genügend Guthaben!")
                 return False
@@ -94,14 +94,14 @@ def submit_purchase(user, products, quantity = 1):
                         (T_ID, P_ID, 'Kauf', quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             
             # Konto- und Produkt-Updates durchführen
-            cursor.execute("UPDATE Konto SET Kontostand =  ? WHERE T_ID = ?", (new_Kontostand, T_ID))
+            cursor.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = ?", (new_Kontostand, T_ID))
             cursor.execute("UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?", (quantity, P_ID))
             
             # Änderungen speichern
             conn.commit()
             print("Transaktion hinzugefügt!")
-            return redirect('buy_check.html')
-        return True
+        
+        return redirect('buy_check.html')  # Rückgabe nach der Schleife
     except Exception as e:
         print(f"Fehler beim Hinzufügen der Transaktion: {e}")
         return False
@@ -231,8 +231,6 @@ def barcode_exists(db: Database, barcode: str):
     query = "SELECT 1 FROM P_Barcode WHERE Barcode = ?"
     return bool(db.execute_select(query, (barcode,)))
 
-
-
 # Routen
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -264,17 +262,17 @@ def add_buy():
     if request.method == 'POST':
         user = request.form['TN_Barcode']
         products = [request.form[f'P_Barcode{i}'] for i in range(1, 8) if f'P_Barcode{i}' in request.form]
-        
+        print(products)
         success = submit_purchase(user, products)
         if success:
             aktualisere_endkontostand()
-            print('Kauf erfolgreich hinzugefügt', 'success')
+            print(f"{user} hat {products} erfolgreich gekauft", 'success')
             return redirect(url_for('buy_check', username=user, products=products))  # Parameter hinzufügen
         else:
             print('Fehler beim Hinzufügen des Kaufs', 'danger')
         return redirect(url_for('add_buy'))
     
-    db = Database()  # Stellen Sie sicher, dass db korrekt initialisiert ist
+    db = Database()  # Stellen Siautocomplete="off" inputmode="none" autocorrect="off" spellcheck="false"e sicher, dass db korrekt initialisiert ist
     IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
     return render_template('add_buy.html', IDs=IDs)
 
