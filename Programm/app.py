@@ -21,123 +21,8 @@ from config import Zeltlager    # Für Lager-Konfiguration
 
 # Initialisierung der Flask-App
 app = Flask(__name__)
-os.system('python OB_DB_erstellen.py')
+os.system('python3 OB_DB_erstellen.py')
 app.config.from_object('config.Config')
-
-
-# Funktionen
-def get_users_from_db():
-    print('get_users_from_db') # Debugging-Information
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT Name FROM Teilnehmer ORDER BY Name")
-    users = cursor.fetchall()
-    conn.close()
-    return [user['Name'] for user in users]
-
-def get_products_from_db():
-    print('get_products_from_db') # Debugging-Information
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT Beschreibung FROM Produkt")
-    products = cursor.fetchall()
-    conn.close()
-    return [product['Beschreibung'] for product in products]
-
-def get_db():
-    print('get_db') # Debugging-Information
-    return sqlite3.connect(app.config['SQLALCHEMY_DATABASE_URI'].split('///')[-1])
-
-def submit_purchase(user, products, quantity = 1):
-    print('submit_purchase') # Debugging-Information
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        # Teilnehmer-ID und Kontostand abrufen
-        cursor.execute("SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?", (user,))
-        user_row = cursor.fetchone()
-        if user_row is None:
-            print("Teilnehmer nicht gefunden!")
-            return False
-        T_ID = user_row['T_ID']
-        
-        cursor.execute("SELECT Kontostand FROM Konto WHERE T_ID = ?", (T_ID,))
-        account_row = cursor.fetchone()
-        if account_row is None:
-            print("Konto nicht gefunden!")
-            return False
-        Kontostand = account_row['Kontostand']
-        Kontostand = round(Kontostand, 2)
-        
-        # Produktpreis und Produkt-ID abrufen
-        for product in products:
-            if product == '':  # Skip empty products
-                continue
-            cursor.execute("SELECT P_ID, Preis FROM Produkt WHERE P_Produktbarcode = ?", (product,))
-            product_row = cursor.fetchone()
-            if product_row is None:
-                print("Produkt nicht gefunden!")
-                return False
-            P_ID = product_row['P_ID']
-            Preis = product_row['Preis']
-            
-            # Prüfen, ob genug Guthaben vorhanden ist
-            total_price = quantity* Preis
-            if total_price > Kontostand:
-                print("Nicht genügend Guthaben!")
-                return False
-            
-            new_Kontostand = Kontostand - total_price
-            new_Kontostand = round(new_Kontostand, 2)
-            
-            # Transaktion einfügen
-            cursor.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT K_ID FROM Konto WHERE T_ID = ?), ?, ?, ?, ?)",
-                        (T_ID, P_ID, 'Kauf', quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-            
-            # Konto- und Produkt-Updates durchführen
-            cursor.execute("UPDATE Konto SET Kontostand =  ? WHERE T_ID = ?", (new_Kontostand, T_ID))
-            cursor.execute("UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?", (quantity, P_ID))
-            
-            # Änderungen speichern
-            conn.commit()
-            print("Transaktion hinzugefügt!")
-            return redirect('buy_check.html')
-        return True
-    except Exception as e:
-        print(f"Fehler beim Hinzufügen der Transaktion: {e}")
-        return False
-    finally:
-        conn.close()
-
-def fetch_users(db: Database) -> List[str]:
-    print('fetch_users') # Debugging-Information
-    users = [user[0] for user in db.execute_select("SELECT Name FROM Teilnehmer ORDER BY Name")]  # Ruft Benutzernamen aus der Datenbank ab
-# Standard-Bibliotheken
-import os   # Für Dateioperationen
-import sqlite3  # Für Datenbankzugriff
-from datetime import datetime # Für Zeitstempel
-
-# Externe Bibliotheken
-import subprocess #
-import numpy as np  #
-import pandas as pd     # Für Datenverarbeitung und -analyse
-import shutil   # Für Dateioperationen
-from typing import List, Tuple, Callable    # Für Typenangaben
-
-# Flask und zugehörige Erweiterungen
-from flask import Flask, Response, render_template, request, redirect, url_for, flash, jsonify  # Für Webanwendungen
-# Benutzerdefinierte Module
-from database import Database, get_db_connection    # Für Datenbankzugriff
-
-# Konfigurationen
-from config import db_backup    # Für Backup-Konfiguration
-from config import Zeltlager    # Für Lager-Konfiguration
-
-# Initialisierung der Flask-App
-app = Flask(__name__)
-os.system('python Lagerbank_mB/Programm/OB_DB_erstellen.py')
-app.config.from_object('config.Config')
-
 
 # Funktionen
 def get_users_from_db():
@@ -342,6 +227,22 @@ def aktualisere_endkontostand():
         print(f"Fehler beim Aktualisieren des Endkontostands: {e}")
     finally:
         db.close()
+        
+def barcode_exists(db, barcode):
+    cursor = db.execute("SELECT 1 FROM Produkt_Barcode WHERE Barcode = ?", (barcode,))
+    return cursor.fetchone() is not None
+
+def add_barcode_to_product(db, product, barcode):
+    try:
+        db.execute(
+            "INSERT INTO Produkt_Barcode (P_ID, Barcode) SELECT P_ID, ? FROM Produkt WHERE Beschreibung = ?",
+            (barcode, product)
+        )
+        db.commit()
+        return True
+    except sqlite3.Error as e:
+        return str(e)
+
 
 # Routen
 @app.route('/', methods=['GET', 'POST'])
@@ -355,6 +256,11 @@ def index():
             titel = "Kein Titel gefunden"
     print(titel)
     return render_template('index.html', titel=titel)
+
+@app.route('/admin')
+def admin():
+    print('admin') # Debugging-Information
+    return render_template('admin.html')
 
 @app.route('/update_product_dropdowns', methods=['GET'])
 def update_product_dropdowns_route():
@@ -430,11 +336,6 @@ def login():
         else:
             print('Invalid password, try again.', 'danger')
     return render_template('login.html')
-
-@app.route('/admin')
-def admin():
-    print('admin') # Debugging-Information
-    return render_template('admin.html')
 
 @app.route('/dblogin', methods=['GET', 'POST'])  # Hinzufügen des fehlenden Schrägs@
 def dblogin():
@@ -535,6 +436,29 @@ def add_fund():
         users = [row[0] for row in cur.fetchall()]
         conn.close()
         return render_template('add_fund.html', users=users)
+
+@app.route('/add_barcode', methods=['GET', 'POST'])
+def add_barcode():
+    db = get_db_connection()
+    products = fetch_products(db)
+    
+    if request.method == 'POST':
+        product = request.form['product']
+        barcode = request.form['barcode']
+        
+        if product not in products:
+            print('Produkt nicht gefunden!', 'error')
+        elif barcode_exists(db, barcode):
+            print('Barcode bereits vorhanden!', 'error')
+        else:
+            result = add_barcode_to_product(db, product, barcode)
+            if result is True:
+                print('Erfolg: Barcode erfolgreich hinzugefügt.', 'success')
+            else:
+                print(f'Fehler beim Hinzufügen des Barcodes: {result}', 'error')
+        return redirect(url_for('add_barcode'))
+    
+    return render_template('add_barcode.html', products=products)
 
 @app.route('/withdraw_fund', methods=['GET', 'POST'])
 def withdraw_fund():
