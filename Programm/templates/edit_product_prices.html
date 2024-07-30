@@ -1,5 +1,8 @@
+<!--Filename = edit_product_prices.html-->
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +14,7 @@
         }
     </script>
 </head>
+
 <body>
     <header>
         <h1 class="topic">Produktpreise bearbeiten</h1>
@@ -25,20 +29,25 @@
     </header>
     <main>
         <div>
-            <h1>Produkt bearbeiten</h1>        
+            <h1>Produkt bearbeiten</h1>
             <form method="post" action="{{ url_for('edit_product_prices') }}">
                 <label for="selected_product">Produktname:</label>
                 <select id="selected_product" name="selected_product">
                     {% for product in products %}
-                        <option value="{{ product }}">{{ product }}</option>
+                    <option value="{{ product }}">{{ product }}</option>
                     {% endfor %}
                 </select><br>
                 <label for="new_price">Neuer Preis:</label>
                 <input type="text" id="new_price" name="new_price" placeholder="Preis"><br>
+                <label for="new_barcode">Neuer Barcode:</label>
+                <input type="text" id="new_barcode" name="new_barcode" placeholder="Barcode"><br>
+                <button class="bt" type="submit" name="action" value="update_barcode">Aktualisiere Barcode</button>
                 <button class="bt" type="submit" name="action" value="update">Aktualisieren</button>
-                <button class="bt" type="submit" name="action" value="delete" onclick="return confirmDelete();">Produkt löschen</button>
+                <button class="bt" type="submit" name="action" value="delete" onclick="return confirmDelete();">Produkt
+                    löschen</button>
             </form>
         </div>
     </main>
 </body>
+
 </html>

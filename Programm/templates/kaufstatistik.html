@@ -1,11 +1,15 @@
+<!--Filename = kaufstatistik.html-->
+
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <title>Kaufstatistik</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body onload="reloadFunction()">
     <header>
         <h1 class="topic">Kaufstatistik</h1>
@@ -25,21 +29,22 @@
                 <thead>
                     <tr>
                         {% for col in data[0].keys() %}
-                            <th>{{ col }}</th>
+                        <th>{{ col }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in data %}
-                        <tr>
-                            {% for value in row.values() %}
-                                <td>{{ value }}</td>
-                            {% endfor %}
-                        </tr>
+                    <tr>
+                        {% for value in row.values() %}
+                        <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </main>
 </body>
+
 </html>

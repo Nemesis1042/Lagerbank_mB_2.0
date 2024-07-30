@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ausgeliehenes Spielzeug</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        table {
+            margin: auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="topic">Ausgeliehenes Spielzeug</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/add_buy">Kauf hinzufügen</a></li>
+                <li><a href="/watch">Übersicht</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <table>
+        <tr>
+            <th>Spielzeug</th>
+            <th>Ausgeliehen von</th>
+        </tr>
+        {% for spielzeug in spielzeuge %}
+        <tr>
+            <td>{{ spielzeug['Name'] }}</td>
+            <td>{{ spielzeug['Teilnehmer'] if spielzeug['Teilnehmer'] else '-' }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

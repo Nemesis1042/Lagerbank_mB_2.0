@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
         }
     </script>
 </head>
+
 <body>
     <header>
         <h1 class="topic">Benutzer bearbeiten</h1>
@@ -32,10 +34,17 @@
                     <option value="{{ user }}">{{ user }}</option>
                     {% endfor %}
                 </select><br>
-                <label for="new_name">Neuer Teilnehmername:</label>
-                <input type="text" id="new_name" name="new_name" placeholder="Neuer Teilnehmername"><br>
-                <label for="new_barcode">Neuer Teilnehmerbarcode:</label>
-                <input type="text" id="new_barcode" name="new_barcode" placeholder="Neuer Teilnehmerbarcode"><br>
+                
+                <div id="update_name_section">
+                    <label for="new_name">Neuer Teilnehmername:</label>
+                    <input type="text" id="new_name" name="new_name" placeholder="Neuer Teilnehmername"><br>
+                </div>
+                
+                <div id="update_barcode_section">
+                    <label for="new_barcode">Neuer Teilnehmerbarcode:</label>
+                    <input type="text" id="new_barcode" name="new_barcode" placeholder="Neuer Teilnehmerbarcode"><br>
+                </div>
+                
                 <button class="bt" type="submit" name="action" value="update">Aktualisiere Name</button>
                 <button class="bt" type="submit" name="action" value="update_b">Aktualisiere Barcode</button>
                 <button class="bt" type="submit" name="action" value="delete" onclick="return confirmDelete();">Benutzer löschen</button>
@@ -43,4 +52,5 @@
         </div>
     </main>
 </body>
+
 </html>

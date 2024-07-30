@@ -21,3 +21,9 @@ class Zeltlager:
     lager = 2024 # Zeltlagerjahr
     
 
+class Lagerbank:
+    lagerbankname = 'Lagerbank2024.db'
+    source_file = 'Lagerbank2024.db'
+    backup_directory = '/home/arkatosh/Documents/CVJM/Bula/Lagerbank'
+    # source_file = 'Lagerbank2024.db'
+    # backup_directory = '/home/arkatosh/Documents/CVJM/Bula/Lagerbank'

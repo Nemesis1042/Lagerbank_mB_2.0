@@ -1,11 +1,15 @@
+<!--Filename = results.html-->
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geld Aufteilen</title>
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
 </head>
+
 <body>
     <header>
         <h1 class="topic">Geld Aufteilen</h1>
@@ -19,10 +23,10 @@
         </nav>
     </header>
     <main>
-        <div class="container">            
+        <div class="container">
             <ul>
                 {% for denom, count in results.counts.items() %}
-                    <li class="li">{{ denom }} €: {{ count }}x</li>
+                <li class="li">{{ denom }} €: {{ count }}x</li>
                 {% endfor %}
                 <li class="highlight">Summe: {{ results.sume | round(2) }} €</li>
                 <li class="highlight">Gesamt Kontostand: {{ results.gesamt_kontostand | round(2) }} €</li>
@@ -30,4 +34,5 @@
         </div>
     </main>
 </body>
+
 </html>

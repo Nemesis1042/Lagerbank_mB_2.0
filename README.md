@@ -4,15 +4,6 @@
 
 ## Python Installation
 
-### Windows
-
-1. **Python herunterladen und installieren:**
-   - Besuche die [offizielle Python-Website](https://www.python.org/downloads/) und lade die neueste Version von Python für Windows herunter (z.B. Python 3.9.x).
-   - Führe das Installationsprogramm aus und aktiviere das Kontrollkästchen "Add Python to PATH".
-
-2. **Überprüfung der Installation:**
-   - Öffne die Eingabeaufforderung (cmd) und führe `python --version` aus, um sicherzustellen, dass Python erfolgreich installiert wurde.
-
 ### Linux Mint
 
 1. **Python über Paketverwaltung installieren:**
@@ -60,3 +51,6 @@
    - FwvdDB
 3. **Datenbank löschen**
    - IchWillDieDatenbankLöschen
+  
+## Barcodes erstellen 
+1. https://www.barcode-generator.de/de/einfacher-generator-fur-alle-barcodes
