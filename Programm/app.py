@@ -19,7 +19,6 @@ from database import Database, get_db_connection    # Für Datenbankzugriff
 from config import db_backup    # Für Backup-Konfiguration
 from config import Zeltlager    # Für Lager-Konfiguration
 
-<<<<<<< HEAD
 
 # Initialisierung der Flask-App
 app = Flask(__name__)
@@ -27,13 +26,6 @@ os.system('python3 DB_create.py')
 app.config.from_object('config.Config')
 
 
-=======
-# Initialisierung der Flask-App
-app = Flask(__name__)
-os.system('python3 OB_DB_erstellen.py')
-app.config.from_object('config.Config')
-
->>>>>>> e00981d070c1bbb6e8995005643ec3dd578591c6
 # Funktionen
 def get_users_from_db():
     print('get_users_from_db') # Debugging-Information
@@ -74,16 +66,9 @@ def submit_purchase(user, products, quantity=1):
         if account_row is None:
             print("Konto nicht gefunden!")
             return False
-<<<<<<< HEAD
         Kontostand = round(account_row['Kontostand'], 2)
         print(f"Ursprünglicher Kontostand: {Kontostand}")  # Debugging-Ausgabe
         
-=======
-        Kontostand = account_row['Kontostand']
-        Kontostand = round(Kontostand, 2)
-        print(products)
-        # Produktpreis und Produkt-ID abrufen
->>>>>>> e00981d070c1bbb6e8995005643ec3dd578591c6
         for product in products:
             if product == '':  # Skip empty products
                 continue
@@ -96,11 +81,7 @@ def submit_purchase(user, products, quantity=1):
             Preis = product_row['Preis']
             
             # Prüfen, ob genug Guthaben vorhanden ist
-<<<<<<< HEAD
             total_price = int(quantity) * Preis
-=======
-            total_price = quantity * Preis
->>>>>>> e00981d070c1bbb6e8995005643ec3dd578591c6
             if total_price > Kontostand:
                 print("Nicht genügend Guthaben!")
                 return False
@@ -114,21 +95,14 @@ def submit_purchase(user, products, quantity=1):
             
             # Konto- und Produkt-Updates durchführen
             cursor.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = ?", (new_Kontostand, T_ID))
-<<<<<<< HEAD
             Kontostand = new_Kontostand  # Aktualisieren Sie den Kontostand für die nächste Iteration
-=======
->>>>>>> e00981d070c1bbb6e8995005643ec3dd578591c6
             cursor.execute("UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?", (quantity, P_ID))
             
             # Änderungen speichern
             conn.commit()
             print("Transaktion hinzugefügt!")
         
-<<<<<<< HEAD
         return True
-=======
-        return redirect('buy_check.html')  # Rückgabe nach der Schleife
->>>>>>> e00981d070c1bbb6e8995005643ec3dd578591c6
     except Exception as e:
         print(f"Fehler beim Hinzufügen der Transaktion: {e}")
         return False
@@ -253,10 +227,6 @@ def aktualisere_endkontostand():
         print(f"Fehler beim Aktualisieren des Endkontostands: {e}")
     finally:
         db.close()
-        
-def barcode_exists(db: Database, barcode: str):
-    query = "SELECT 1 FROM P_Barcode WHERE Barcode = ?"
-    return bool(db.execute_select(query, (barcode,)))
 
 def submit_borrow(user, item):
     print(f"Benutzer: {user}, Spielzeug: {item}")  # Debugging-Ausgabe
@@ -323,7 +293,6 @@ def update_product_dropdowns_route():
 @app.route('/buy_check', methods=['GET', 'POST'])
 def buy_check():
     if request.method == 'POST':
-<<<<<<< HEAD
         user = request.form['user']
         products = request.form.getlist('products')
         quantity = request.form.get('quantity', 1)
@@ -339,23 +308,6 @@ def buy_check():
         products = request.args.getlist('products')
         quantity = request.args.get('quantity', 1)
         return render_template('buy_check.html', username=username, products=products, quantity=quantity)
-=======
-        user = request.form['TN_Barcode']
-        products = [request.form[f'P_Barcode{i}'] for i in range(1, 8) if f'P_Barcode{i}' in request.form]
-        print(products)
-        success = submit_purchase(user, products)
-        if success:
-            aktualisere_endkontostand()
-            print(f"{user} hat {products} erfolgreich gekauft", 'success')
-            return redirect(url_for('buy_check', username=user, products=products))  # Parameter hinzufügen
-        else:
-            print('Fehler beim Hinzufügen des Kaufs', 'danger')
-        return redirect(url_for('add_buy'))
-    
-    db = Database()  # Stellen Siautocomplete="off" inputmode="none" autocorrect="off" spellcheck="false"e sicher, dass db korrekt initialisiert ist
-    IDs = db.execute_select("SELECT T_ID FROM Teilnehmer")  # Korrekte Verwendung
-    return render_template('add_buy.html', IDs=IDs)
->>>>>>> e00981d070c1bbb6e8995005643ec3dd578591c6
 
 @app.route('/retry_purchase', methods=['GET', 'POST'])
 def retry_purchase():
@@ -883,7 +835,6 @@ def return_spielzeug():
         if not spielzeug:
             print('Spielzeug nicht gefunden!', 'danger')
         else:
-<<<<<<< HEAD
             cur.execute("SELECT * FROM Spielzeug_Ausleihe WHERE Spielzeug_ID = ? AND Rückgabedatum IS NULL", (spielzeug[0],))
             ausleihe = cur.fetchone()
             if not ausleihe:
@@ -891,72 +842,6 @@ def return_spielzeug():
             else:
                 cur.execute("UPDATE Spielzeug_Ausleihe SET Rückgabedatum = ? WHERE Spielzeug_Ausleihe_ID = ?", (datetime.now().strftime("%d.%m.%Y"), ausleihe[0]))
                 cur.execute("UPDATE Spielzeug SET Ausgeliehen = 0 WHERE Spielzeug_ID = ?", (spielzeug[0],))
-=======
-            cur.execute("INSERT INTO Produkt (Beschreibung, P_Produktbarcode, Preis, Anzahl_verkauft) VALUES (?, ?,?, 0)", (product, P_barcode, price))
-            conn.commit()
-            print('Produkt erfolgreich hinzugefügt.', 'success')
-        conn.close()
-        return redirect(url_for('admin'))
-    return render_template('add_product.html')
-
-@app.route('/edit_product_prices', methods=['GET', 'POST'])
-def edit_product_prices():
-    print('edit_product_prices') # Debugging-Information
-    if request.method == 'POST':
-        selected_product = request.form.get('selected_product')
-        action = request.form.get('action')
-        
-        
-        if action == 'update': # Aktualisieren des Produktpreises
-            new_price_str = request.form.get('new_price')
-            if new_price_str:
-                try:
-                    new_price = float(new_price_str)
-                except ValueError:
-                    print('Bitte geben Sie einen gültigen Preis ein.', 'danger')
-                    return redirect(url_for('edit_product_prices'))
-            else:
-                new_price = None
-            if not selected_product: 
-                print('Bitte wählen Sie ein Produkt aus.', 'danger')
-                return redirect(url_for('edit_product_prices'))
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                if new_price is not None:
-                    cur.execute("UPDATE Produkt SET Preis = ? WHERE Beschreibung = ?", (new_price, selected_product))
-                    conn.commit()
-                    print('Produktpreis erfolgreich aktualisiert.', 'success')
-            except Exception as e:
-                print(f'Fehler: {e}', 'danger')
-            finally:
-                conn.close()
-                
-        elif action == 'update_barcode': # Aktualisieren des Barcodes
-            new_barcode = request.form.get('new_barcode')
-            if not new_barcode:
-                print('Bitte geben Sie einen neuen Barcode ein.', 'danger')
-                return redirect(url_for('edit_product_prices'))
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute("UPDATE Produkt SET P_Produktbarcode = ? WHERE Beschreibung = ?", (new_barcode, selected_product))
-                conn.commit()
-                print('Barcode erfolgreich aktualisiert.', 'success')
-            except Exception as e:
-                print(f'Fehler: {e}', 'danger')
-            finally:
-                conn.close()
-                
-        elif action == 'delete': # Löschen des Produkts
-            if not selected_product:
-                print('Bitte wählen Sie ein Produkt aus.', 'danger')
-                return redirect(url_for('edit_product_prices'))
-            try:
-                conn = get_db_connection()
-                cur = conn.cursor()
-                cur.execute("UPDATE Produkt SET Preis = 0.00 WHERE Beschreibung = ?", (selected_product,))
->>>>>>> e00981d070c1bbb6e8995005643ec3dd578591c6
                 conn.commit()
                 print('Spielzeug erfolgreich zurückgegeben.', 'success')
         conn.close()
@@ -1132,7 +1017,7 @@ def settings():
                 
                 # Update database
                 conn.execute("UPDATE Einstellungen SET first_day = ?, last_day = ?, Zeltlagername = ? WHERE Zeltlager = ?", 
-                             (first_day_db_format, last_day_db_format, lagername, Zeltlager.lager))
+                            (first_day_db_format, last_day_db_format, lagername, Zeltlager.lager))
                 conn.commit()
                 
                 print("Erfolg: Einstellungen erfolgreich aktualisiert.")
