@@ -1,12 +1,16 @@
+<!--Filename = add_user.html-->
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nutzer hinzufügen</title>
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
-    
+
 </head>
+
 <body>
     <header>
         <h1 class="topic">Teilnehmer hinzufügen</h1>
@@ -20,17 +24,18 @@
         </nav>
     </header>
     <main>
-    <div>
-        <form method="post">
-            <label for="user">Teilnehmername:</label>
-            <input type="text" id="user" name="user" required autofocus><br>
-            <label for="barcode">Teilnehmerbarcode:</label>
-            <input type="text" id="TN_B" name="TN_B" required><br>  <!-- Korrektur: name auf 'TN_B' geändert -->
-            <label for="amount">Einzahlungsbetrag:</label>
-            <input type="number" id="amount" name="amount" required step="0.01"><br>
-            <button class="bt" type="submit">Hinzufügen</button>
-        </form>
-    </div>
-    <main>
+        <div>
+            <form method="post">
+                <label for="user">Teilnehmername:</label>
+                <input type="text" id="user" name="user" required autofocus><br>
+                <label for="barcode">Teilnehmerbarcode:</label>
+                <input type="text" id="TN_B" name="TN_B" required><br> <!-- Korrektur: name auf 'TN_B' geändert -->
+                <label for="amount">Einzahlungsbetrag:</label>
+                <input type="number" id="amount" name="amount" required step="0.01"><br>
+                <button class="bt" type="submit">Hinzufügen</button>
+            </form>
+        </div>
+        <main>
 </body>
+
 </html>

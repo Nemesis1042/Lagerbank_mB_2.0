@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spielzeug Ausleihen Übersicht</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        table {
+            width: 100%;
+            max-width: 800px;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        thead {
+            background-color: var(--primary-color);
+            color: black;
+        }
+
+        thead th {
+            padding: 10px;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--background-color);
+        }
+
+        tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1 class="topic">Übersicht der ausgeliehenen Spielzeuge</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/login">Einstellungen</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name des Spielzeugs</th>
+                    <th>Anzahl der Ausleihen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for spielzeug in spielzeuge %}
+                <tr>
+                    <td>{{ spielzeug.Name }}</td>
+                    <td>{{ spielzeug.Ausleihen }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+</body>
+
+</html>

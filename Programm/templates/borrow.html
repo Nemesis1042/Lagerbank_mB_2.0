@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spielzeug ausleihen</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1 class="topic">Spielzeug ausleihen</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/borrow">Spielzeug ausleihen</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div>
+            {% for category, message in get_flashed_messages(with_categories=True) %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+            <h1>Spielzeug ausleihen</h1>
+            <form action="/borrow" method="post">
+                <label for="TN_Barcode">Teilnehmer Barcode:</label>
+                <input type="text" id="TN_Barcode" name="TN_Barcode" required autofocus><br><br>
+                <label for="Spielzeug">Spielzeug Barcode:</label>
+                <input type="text" id="Spielzeug" name="Spielzeug" required><br><br>
+                <input type="submit" value="Spielzeug ausleihen">
+            </form>
+        </div>
+    </main>
+</body>
+</html>

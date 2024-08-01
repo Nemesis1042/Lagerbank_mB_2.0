@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Spielzeug zurückgeben</title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+
+    <body>
+        <header>
+            <h1 class="topic">Spielzeug zurückgeben</h1>
+            <nav>
+                <ul>
+                    <li><a href="/">Startseite</a></li>
+                    <li><a href="/borrow">Spielzeug ausleihen</a></li>
+                    <li><a href="/watch">Übersicht</a></li>
+                    <li><a href="#" onclick="history.back();">Zurück</a></li>
+                </ul>
+            </nav>
+        </header>
+        <div class="admin-content">
+            <h2>Spielzeug zurückgeben</h2>
+            <form class="form-in-div" action="/return_spielzeug" method="POST">
+                <label for="TN_Barcode">Teilnehmer Barcode:</label>
+                <input type="text" id="TN_Barcode" name="TN_Barcode" required
+                    autofocus><br><br>
+                <label for="Spielzeug">Spielzeug Barcode:</label>
+                <input type="text" id="Spielzeug" name="Spielzeug"
+                    required><br><br>
+                <input type="submit" value="Spielzeug zurückgeben">
+            </form>
+        </div>
+    </body>
+</html>

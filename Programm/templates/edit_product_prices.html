@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produktpreise bearbeiten</title>
-    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css">
     <script>
         function confirmDelete() {
             return confirm('Sind Sie sicher, dass Sie dieses Produkt löschen möchten?');
         }
     </script>
 </head>
+
 <body>
     <header>
         <h1 class="topic">Produktpreise bearbeiten</h1>
@@ -24,19 +26,27 @@
         </nav>
     </header>
     <main>
-        <div>
-            <h1>Produkt bearbeiten</h1>        
-            <form method="post" action="{{ url_for('edit_product_prices') }}">
+        <div class="form-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul>
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+            <form action="{{ url_for('edit_product_prices') }}" method="POST">
                 <label for="selected_product">Produktname:</label>
                 <select id="selected_product" name="selected_product">
                     {% for product in products %}
                         <option value="{{ product }}">{{ product }}</option>
                     {% endfor %}
-                </select><br>
+                </select><br><br>
                 <label for="new_price">Neuer Preis:</label>
-                <input type="text" id="new_price" name="new_price" placeholder="Preis"><br>
+                <input type="text" id="new_price" name="new_price" placeholder="Preis"><br><br>
                 <label for="new_barcode">Neuer Barcode:</label>
-                <input type="text" id="new_barcode" name="new_barcode" placeholder="Barcode"><br>
+                <input type="text" id="new_barcode" name="new_barcode" placeholder="Barcode"><br><br>
                 <button class="bt" type="submit" name="action" value="update_barcode">Aktualisiere Barcode</button>
                 <button class="bt" type="submit" name="action" value="update">Aktualisieren</button>
                 <button class="bt" type="submit" name="action" value="delete" onclick="return confirmDelete();">Produkt löschen</button>
@@ -44,4 +54,5 @@
         </div>
     </main>
 </body>
+
 </html>

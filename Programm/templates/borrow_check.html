@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spielzeugausleihe bestätigen</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1 class="topic">Spielzeugausleihe bestätigen</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/borrow">Spielzeug ausleihen</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <form action="/borrow_check" method="post">
+            <div>
+                <h1>Spielzeugausleihe bestätigen</h1>
+                <p>Bestätigung der Spielzeugausleihe.</p>
+                <div>
+                    <p>Teilnehmer: {{ username }}</p>
+                    <p>Spielzeug: {{ item }}</p>
+                </div>
+                <input type="hidden" name="user" value="{{ username }}">
+                <input type="hidden" name="item" value="{{ item }}">
+                <input class="bt" type="submit" value="Ausgeliehen bestätigen">
+            </div>
+        </form>
+    </main>
+</body>
+</html>

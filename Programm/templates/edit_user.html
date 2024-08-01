@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nutzer bearbeiten</title>
     <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <script src="/static/js/flash.js"></script>
     <script>
         function confirmDelete() {
             return confirm('Sind Sie sicher, dass Sie diesen Benutzer löschen möchten?');
         }
     </script>
 </head>
+
 <body>
     <header>
         <h1 class="topic">Benutzer bearbeiten</h1>
@@ -32,15 +35,30 @@
                     <option value="{{ user }}">{{ user }}</option>
                     {% endfor %}
                 </select><br>
-                <label for="new_name">Neuer Teilnehmername:</label>
-                <input type="text" id="new_name" name="new_name" placeholder="Neuer Teilnehmername"><br>
-                <label for="new_barcode">Neuer Teilnehmerbarcode:</label>
-                <input type="text" id="new_barcode" name="new_barcode" placeholder="Neuer Teilnehmerbarcode"><br>
+                
+                <div id="update_name_section">
+                    <label for="new_name">Neuer Teilnehmername:</label>
+                    <input type="text" id="new_name" name="new_name" placeholder="Neuer Teilnehmername"><br>
+                </div>
+                
+                <div id="update_barcode_section">
+                    <label for="new_barcode">Neuer Teilnehmerbarcode:</label>
+                    <input type="text" id="new_barcode" name="new_barcode" placeholder="Neuer Teilnehmerbarcode"><br>
+                </div>
+                
                 <button class="bt" type="submit" name="action" value="update">Aktualisiere Name</button>
                 <button class="bt" type="submit" name="action" value="update_b">Aktualisiere Barcode</button>
                 <button class="bt" type="submit" name="action" value="delete" onclick="return confirmDelete();">Benutzer löschen</button>
             </form>
         </div>
     </main>
+    <script>
+        // Get flash messages from the server-side template
+        const flashMessages = {{ get_flashed_messages() | tojson }};
+
+        // Call the function from the external JavaScript file
+        displayFlashMessages(flashMessages);
+    </script>
 </body>
+
 </html>

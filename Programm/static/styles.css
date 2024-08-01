@@ -1,17 +1,14 @@
 :root {
-    --text-color: #0a0101; /* Schriftfarbe für dunkles Thema */
-    --background-color: #fdfdfd; /* Hintergrundfarbe für dunkles Thema */
-    --link-color: #fff; /* Linkfarbe für dunkles Thema */
+    --text-color: #0a0101;
+    /* Schriftfarbe für dunkles Thema */
+    --background-color: #fdfdfd;
+    /* Hintergrundfarbe für dunkles Thema */
+    --link-color: #fff;
+    /* Linkfarbe für dunkles Thema */
 }
 
-/* [data-theme="dark"] {
-    --text-color: #fff; /* Schriftfarbe für dunkles Thema */
-    /*--background-color: #333; /* Hintergrundfarbe für dunkles Thema */
-    /*--link-color: #fff; /* Linkfarbe für dunkles Thema */
-/*} */
-
-.topic{
-    color: #f0f0f0
+.topic {
+    color: #f0f0f0;
 }
 
 body {
@@ -31,8 +28,8 @@ header {
     width: 100%;
     text-align: center;
     padding: 20px 0;
-    background-color: #333;
-    color: #fdfbfb
+    background-color: #60605d;
+    color: #fdfbfb;
 }
 
 nav ul {
@@ -54,7 +51,7 @@ nav ul li:last-child {
 nav ul li a {
     text-decoration: none;
     padding: 10px 20px;
-    background-color: #ff004d;
+    background-color: #e40038;
     color: var(--link-color);
     border: none;
     border-radius: 5px;
@@ -85,7 +82,7 @@ a {
 
 button {
     padding: 10px 20px;
-    background-color: #ff004d;
+    background-color: #e40038;
     color: var(--link-color);
     border: none;
     border-radius: 5px;
@@ -95,10 +92,12 @@ button {
 }
 
 button:hover {
-    background-color: #ff1a66;
+    background-color: #e40038;
 }
 
-form, .container, .admin-content {
+form,
+.container,
+.admin-content {
     background-color: #a5a3a3a4;
     padding: 20px;
     border-radius: 5px;
@@ -109,13 +108,15 @@ form, .container, .admin-content {
     margin: auto;
 }
 
-h1, h2 {
+h1,
+h2 {
     text-align: center;
     color: var(--text-color);
     margin-bottom: 20px;
 }
 
-p, label {
+p,
+label {
     color: var(--text-color);
     margin: 10px 0;
     display: block;
@@ -133,15 +134,19 @@ li {
     border-radius: 5px;
 }
 
-.li{
+.li {
     margin: 10px 0;
     padding: 10px;
     border-radius: 5px;
     background-color: #f0c0c0de;
-
 }
 
-input[type="text"], input[type="number"], input[type="password"], select, input[type="submit"], button {
+input[type="text"],
+input[type="number"],
+input[type="password"],
+select,
+input[type="submit"],
+button {
     padding: 10px;
     border: none;
     border-radius: 5px;
@@ -153,21 +158,32 @@ input[type="text"], input[type="number"], input[type="password"], select, input[
     margin: 10px auto;
 }
 
-input[type="text"]:hover, input[type="number"]:hover, input[type="password"]:hover, select:hover, input[type="submit"]:hover, button:hover {
+input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="password"]:hover,
+select:hover,
+input[type="submit"]:hover,
+button:hover {
     background-color: #f0f0f0;
 }
 
-input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus {
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus {
     outline: none;
 }
 
-input[type="submit"], .admin-link, .highlight {
-    background-color: #ff004d;
+input[type="submit"],
+.admin-link,
+.highlight {
+    background-color: #e40038;
     color: var(--link-color);
 }
 
-input[type="submit"]:hover, .admin-link:hover, .highlight:hover {
-    background-color: #ff1a66;
+input[type="submit"]:hover,
+.admin-link:hover,
+.highlight:hover {
+    background-color: #e40038;
 }
 
 .admin-link {
@@ -180,9 +196,9 @@ input[type="submit"]:hover, .admin-link:hover, .highlight:hover {
     text-align: center;
 }
 
-.bt{
+.bt {
     padding: 10px 20px;
-    background-color: #ff004d;
+    background-color: #e40038;
     color: var(--link-color);
     border: none;
     border-radius: 5px;
@@ -192,8 +208,22 @@ input[type="submit"]:hover, .admin-link:hover, .highlight:hover {
     display: block;
     text-align: center;
 }
+
 .bt:hover {
-    background-color: #f33f7b;
+    background-color: #e40038;
+}
+
+/* Center the forms and ensure they do not overflow the container */
+.form-in-div {
+    width: 100%;
+    text-align: center;
+    margin: 10px 0;
+    padding: 0;
+    background: none;
+    border: none;
+    /* Optional: remove border if needed */
+    box-shadow: none;
+    /* Optional: add shadow if needed */
 }
 
 /* Responsive Design */
@@ -206,7 +236,7 @@ input[type="submit"]:hover, .admin-link:hover, .highlight:hover {
 
     nav ul li {
         display: block;
-        margin: 1px 0;
+        margin: 10px 0;
     }
 
     li {
@@ -217,17 +247,8 @@ input[type="submit"]:hover, .admin-link:hover, .highlight:hover {
         margin: 5px;
         display: block;
     }
-    .topic{
-        color: #f0f0f0
-    }
 
-}
-
-/* Force dark mode */
-/*@media (prefers-color-scheme: dark) {
-    :root {
-        --text-color: #fff;
-        --background-color: #333;
-        --link-color: #fff;
+    .topic {
+        color: #f0f0f0;
     }
 }

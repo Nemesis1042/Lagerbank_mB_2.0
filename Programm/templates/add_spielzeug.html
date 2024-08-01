@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <header>
+        <h1 class="topic">Spielzeuge hinzufügen</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/add_buy">Kauf hinzufügen</a></li>
+                <li><a href="/watch">Übersicht</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="form-container">
+            <form action="/add_spielzeug" method="POST">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required autofocus><br><br>
+                <label for="barcode">Barcode:</label>
+                <input type="text" id="barcode" name="barcode" required><br><br>
+                <input type="submit" value="Hinzufügen">
+            </form>
+        </div>
+    </main>
+</body>
+
+</html>

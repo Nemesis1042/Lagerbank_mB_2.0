@@ -1,11 +1,15 @@
+<!--Filename = A_Produkte.html-->
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/js/flash.js" defer></script>
 </head>
+
 <body>
     <header>
         <h1 class="topic">Admin Panel</h1>
@@ -24,4 +28,15 @@
         <a href="/edit_product_prices" class="admin-link">Produkt bearbeiten</a>
     </div>
 
-    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get flash messages from the server-side template
+            const flashMessages = {{ get_flashed_messages() | tojson | safe }};
+
+            // Call the function from the external JavaScript file
+            displayFlashMessages(flashMessages);
+        });
+    </script>
+</body>
+
+</html>

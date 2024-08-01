@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spielzeug bearbeiten</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/js/flash.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1 class="topic">Spielzeug bearbeiten</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/add_buy">Kauf hinzufügen</a></li>
+                <li><a href="/watch">Übersicht</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="form-container">
+            <form action="/edit_spielzeug" method="POST">
+                <label for="selected_spielzeug">Spielzeug auswählen:</label>
+                <select id="selected_spielzeug" name="selected_spielzeug">
+                    {% for spielzeug in spielzeuge %}
+                        <option value="{{ spielzeug['Name'] }}">{{ spielzeug['Name'] }}</option>
+                    {% endfor %}
+                </select><br><br>
+                <label for="action">Aktion auswählen:</label>
+                <select id="action" name="action">
+                    <option value="update">Aktualisieren</option>
+                    <option value="delete">Löschen</option>
+                </select><br><br>
+                <label for="new_name">Neuer Name:</label>
+                <input type="text" id="new_name" name="new_name"><br><br>
+                <label for="new_barcode">Neuer Barcode:</label>
+                <input type="text" id="new_barcode" name="new_barcode"><br><br>
+                <input class="bt" type="submit" value="Bestätigen">
+            </form>
+        </div>
+    </main>
+    <script>
+        // Get flash messages from the server-side template
+        const flashMessages = {{ get_flashed_messages() | tojson }};
+
+        // Call the function from the external JavaScript file
+        displayFlashMessages(flashMessages);
+    </script>
+</body>
+
+</html>
