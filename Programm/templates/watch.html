@@ -8,6 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaktionen anzeigen</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.3.3/css/fixedColumns.dataTables.min.css">
+    <script src="https://cdn.datatables.net/fixedcolumns/3.3.3/js/dataTables.fixedColumns.min.js"></script>
+
 
     <style>
         body {
@@ -96,6 +99,11 @@
             color: black;
         }
 
+        .scrollable-div {
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
         @media (max-width: 768px) {
             nav ul {
                 flex-direction: column;
@@ -133,7 +141,7 @@
         </nav>
     </header>
     <main>
-        <div> <!-- Hinzugefügt: horizontaler Scroll -->
+        <div class="scrollable-div"> <!-- Hinzugefügt: horizontaler Scroll -->
             {{ tables|safe }}
         </div>
     </main>
@@ -143,10 +151,15 @@
         $(document).ready(function () {
             $('table.data').DataTable({
                 "paging": false,  // Disable pagination
-                "searching": true
+                "searching": true,
+                "scrollX": true,  // Enable horizontal scrolling
+                "fixedColumns": {
+                    "leftColumns": 1  // Fix the first column
+                }
             });
         });
     </script>
+
 </body>
 
 </html>

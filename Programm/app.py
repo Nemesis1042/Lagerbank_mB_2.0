@@ -534,7 +534,7 @@ def add_user():
 def add_fund():
     print('add_fund') # Debugging-Information
     if request.method == 'POST':
-        user = request.form['TN_B']
+        user = request.form['user']
         amount = float(request.form['amount'])
         conn = get_db_connection()
         cur = conn.cursor()
