@@ -1,5 +1,3 @@
-<!--Filename = watch.html-->
-
 <!DOCTYPE html>
 <html lang="de">
 
@@ -9,9 +7,6 @@
     <title>Transaktionen anzeigen</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.3.3/css/fixedColumns.dataTables.min.css">
-    <script src="https://cdn.datatables.net/fixedcolumns/3.3.3/js/dataTables.fixedColumns.min.js"></script>
-
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,8 +16,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            height: 100%;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
         }
 
@@ -42,7 +36,7 @@
         }
 
         nav ul li {
-            display: inline;
+            display: inline-block;
             margin-right: 20px;
         }
 
@@ -58,6 +52,7 @@
             border: none;
             border-radius: 5px;
             transition: background-color 0.3s;
+            display: inline-block;
         }
 
         nav ul li a:hover {
@@ -70,13 +65,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             text-align: center;
             padding: 20px;
+            width: 100%;
+            overflow-x: auto;
         }
 
         a {
-            display: column;
+            display: inline-block;
             text-align: center;
             margin-top: 20px;
             color: #333;
@@ -102,26 +99,29 @@
         .scrollable-div {
             overflow-x: auto;
             white-space: nowrap;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
         }
 
         @media (max-width: 768px) {
             nav ul {
+                display: flex;
                 flex-direction: column;
                 margin: 0;
                 padding: 0;
+                align-items: center;
             }
 
             nav ul li {
                 display: block;
-                margin: 1px 0;
-            }
-
-            li {
-                margin: 2px;
+                margin: 5px 0;
             }
 
             a {
-                margin: 5px;
+                margin: 5px 0;
                 display: block;
             }
         }
@@ -141,25 +141,38 @@
         </nav>
     </header>
     <main>
-        <div class="scrollable-div"> <!-- Hinzugefügt: horizontaler Scroll -->
+        <div class="scrollable-div">
             {{ tables|safe }}
         </div>
     </main>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/3.3.3/js/dataTables.fixedColumns.min.js"></script>
     <script>
         $(document).ready(function () {
             $('table.data').DataTable({
                 "paging": false,  // Disable pagination
                 "searching": true,
-                "scrollX": true,  // Enable horizontal scrolling
+                "scrollX": false,  // Enable horizontal scrolling
                 "fixedColumns": {
                     "leftColumns": 1  // Fix the first column
+                },
+                "language": {
+                    "paginate": {
+                        "first": "Erste",
+                        "last": "Letzte",
+                        "next": "Nächste",
+                        "previous": "Vorherige"
+                    },
+                    "search": "Suche:",
+                    "zeroRecords": "Keine passenden Aufzeichnungen gefunden",
+                    "info": "Zeige _START_ bis _END_ von _TOTAL_ Einträgen",
+                    "infoEmpty": "Zeige 0 bis 0 von 0 Einträgen",
+                    "infoFiltered": "(gefiltert von _MAX_ gesamten Einträgen)"
                 }
             });
         });
     </script>
-
 </body>
 
 </html>

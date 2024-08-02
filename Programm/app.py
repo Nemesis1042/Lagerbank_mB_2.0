@@ -9,6 +9,7 @@ import numpy as np  #
 import pandas as pd     # Für Datenverarbeitung und -analyse
 import shutil   # Für Dateioperationen
 from typing import List, Tuple, Callable    # Für Typenangaben
+from collections import Counter
 
 # Flask und zugehörige Erweiterungen
 from flask import Flask, Response, render_template, request, redirect, url_for, flash, jsonify  # Für Webanwendungen
@@ -49,11 +50,13 @@ def get_db():
     print('get_db') # Debugging-Information
     return sqlite3.connect(app.config['SQLALCHEMY_DATABASE_URI'].split('///')[-1])
 
-def submit_purchase(user, products, quantity=1):
-    print('submit_purchase')  # Debugging-Information
+def submit_purchase(user, product_data):
     conn = get_db_connection()
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
+    
     try:
+        # Fetch user ID
         cursor.execute("SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?", (user,))
         user_row = cursor.fetchone()
         if user_row is None:
@@ -61,17 +64,16 @@ def submit_purchase(user, products, quantity=1):
             return False
         T_ID = user_row['T_ID']
         
+        # Fetch account balance
         cursor.execute("SELECT Kontostand FROM Konto WHERE T_ID = ?", (T_ID,))
         account_row = cursor.fetchone()
         if account_row is None:
             flash("Konto nicht gefunden!")
             return False
         Kontostand = round(account_row['Kontostand'], 2)
-        print(f"Ursprünglicher Kontostand: {Kontostand}")  # Debugging-Ausgabe
         
-        for product in products:
-            if product == '':  # Skip empty products
-                continue
+        for product, quantity in product_data.items():
+            # Fetch product details
             cursor.execute("SELECT P_ID, Preis FROM Produkt WHERE P_Produktbarcode = ?", (product,))
             product_row = cursor.fetchone()
             if product_row is None:
@@ -80,30 +82,29 @@ def submit_purchase(user, products, quantity=1):
             P_ID = product_row['P_ID']
             Preis = product_row['Preis']
             
-            # Prüfen, ob genug Guthaben vorhanden ist
-            total_price = int(quantity) * Preis
+            total_price = quantity * Preis
             if total_price > Kontostand:
                 flash("Nicht genügend Guthaben!")
                 return False
             
-            new_Kontostand = Kontostand - total_price
-            new_Kontostand = round(new_Kontostand, 2)
-            print(new_Kontostand)
-            # Transaktion einfügen
-            cursor.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT K_ID FROM Konto WHERE T_ID = ?), ?, ?, ?, ?)",
-                        (T_ID, P_ID, 'Kauf', quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            new_Kontostand = round(Kontostand - total_price, 2)
             
-            # Konto- und Produkt-Updates durchführen
+            # Insert transaction
+            cursor.execute("""
+                INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum)
+                VALUES ((SELECT K_ID FROM Konto WHERE T_ID = ?), ?, ?, ?, ?)
+            """, (T_ID, P_ID, 'Kauf', quantity, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            
+            # Update account balance and product sales
             cursor.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = ?", (new_Kontostand, T_ID))
-            Kontostand = new_Kontostand  # Aktualisieren Sie den Kontostand für die nächste Iteration
             cursor.execute("UPDATE Produkt SET Anzahl_verkauft = Anzahl_verkauft + ? WHERE P_ID = ?", (quantity, P_ID))
             
-            # Änderungen speichern
-            conn.commit()
-            print("Transaktion hinzugefügt!")
+            Kontostand = new_Kontostand  # Update Kontostand for the next iteration
         
+        conn.commit()  # Commit all changes if everything is successful
         return True
     except Exception as e:
+        conn.rollback()  # Rollback if an error occurs
         flash(f"Fehler beim Hinzufügen der Transaktion: {e}")
         return False
     finally:
@@ -265,6 +266,17 @@ def barcode_exists(db: Database, barcode: str):
     query = "SELECT 1 FROM P_Barcode WHERE Barcode = ?"
     return bool(db.execute_select(query, (barcode,)))
 
+def get_product_price(product_barcode):
+    conn = get_db_connection()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT Preis FROM Produkt WHERE Beschreibung = ?", (product_barcode,))
+    product_row = cursor.fetchone()
+    conn.close()
+    if product_row:
+        return product_row['Preis']
+    return 0
+
 # Routen
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -326,10 +338,20 @@ def buy_check():
     if request.method == 'POST':
         user = request.form['user']
         products = request.form.getlist('products')
-        quantity = request.form.get('quantity', 1)
-        success = submit_purchase(user, products, quantity)
+        
+        # Aggregate product quantities
+        product_data = dict(Counter(products))
+        
+        # Remove empty products
+        product_data = {k: v for k, v in product_data.items() if k.strip()}
+
+        # Calculate the total price
+        total_price = sum(get_product_price(product) * quantity for product, quantity in product_data.items())
+        total_price = "{:.2f}".format(total_price)
+
+        success = submit_purchase(user, product_data)
         if success:
-            print(f"{user} hat {products} erfolgreich gekauft", 'success')
+            flash(f"{user} hat {', '.join(product_data.keys())} für insgesamt {total_price} € erfolgreich gekauft", 'success')
             return redirect(url_for('success'))
         else:
             flash('Fehler beim Hinzufügen des Kaufs', 'danger')
@@ -337,8 +359,23 @@ def buy_check():
     else:
         username = request.args.get('username')
         products = request.args.getlist('products')
-        quantity = request.args.get('quantity', 1)
-        return render_template('buy_check.html', username=username, products=products, quantity=quantity)
+
+        # Aggregate product quantities
+        product_data = dict(Counter(products))
+
+        # Remove empty products
+        product_data = {k: v for k, v in product_data.items() if k.strip()}
+
+        # Calculate the total price
+        if product_data:
+            total_price = sum(get_product_price(product) * quantity for product, quantity in product_data.items())
+        else:
+            total_price = 3.40  # Default total price when no products are selected
+
+        # Format total price to 2 decimal places
+        total_price = "{:.2f}".format(total_price)
+
+        return render_template('buy_check.html', username=username, product_data=product_data, gesammtpreis=total_price)
 
 @app.route('/retry_purchase', methods=['GET', 'POST'])
 def retry_purchase():
@@ -538,18 +575,18 @@ def add_fund():
         amount = float(request.form['amount'])
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT Name FROM Teilnehmer WHERE TN_Barcode = ?", (user,))
+        cur.execute("SELECT Name FROM Teilnehmer WHERE Name = ?", (user,))
         if not cur.fetchone():
             flash('Benutzer nicht gefunden!', 'danger')
         else:
-            user_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.TN_Barcode = ?", (user,)).fetchone()
-            user_einzahlung = cur.execute("SELECT Einzahlung FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.TN_Barcode = ?", (user,)).fetchone()
+            user_balance = cur.execute("SELECT Kontostand FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.Name = ?", (user,)).fetchone()
+            user_einzahlung = cur.execute("SELECT Einzahlung FROM Konto JOIN Teilnehmer ON Konto.T_ID = Teilnehmer.T_ID WHERE Teilnehmer.Name = ?", (user,)).fetchone()
             if user_balance:
                 new_balance = user_balance['Kontostand'] + amount
-                cur.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?)", (new_balance, user))
-                cur.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?), 0, 'Einzahlung', ?, ?)", (user, amount, datetime.now().strftime("%d.%m.%Y %H:%M:%S")))
+                cur.execute("UPDATE Konto SET Kontostand = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE Name = ?)", (new_balance, user))
+                cur.execute("INSERT INTO Transaktion (K_ID, P_ID, Typ, Menge, Datum) VALUES ((SELECT T_ID FROM Teilnehmer WHERE Name = ?), 0, 'Einzahlung', ?, ?)", (user, amount, datetime.now().strftime("%d.%m.%Y %H:%M:%S")))
                 new_einzahlung = user_einzahlung['Einzahlung'] + amount
-                cur.execute("UPDATE Konto SET Einzahlung = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE TN_Barcode = ?)", (new_einzahlung, user)) # Update the deposit
+                cur.execute("UPDATE Konto SET Einzahlung = ? WHERE T_ID = (SELECT T_ID FROM Teilnehmer WHERE Name = ?)", (new_einzahlung, user)) # Update the deposit
                 conn.commit()
                 print(f'{amount} € erfolgreich hinzugefügt.', 'success')
             else:

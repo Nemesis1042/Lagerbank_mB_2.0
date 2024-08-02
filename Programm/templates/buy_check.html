@@ -1,50 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Kauf Übersicht</title>
-        <link rel="stylesheet" href="/static/styles.css">
-    </head>
-
-    <body>
-        <header>
-            <h1 class="topic">Kauf Übersicht</h1>
-            <nav>
-                <ul>
-                    <li><a href="/">Startseite</a></li>
-                    <li><a href="/add_buy">Neuen Kauf hinzufügen</a></li>
-                    <li><a href="#" onclick="history.back();">Zurück</a></li>
-                </ul>
-            </nav>
-        </header>
-        <main>
-            <div class="container">
-                <h2>Vielen Dank für Ihren Kauf!</h2>
-                <p>Teilnehmerbarcode: {{ username }}</p>
-                <h3>Gekaufte Produkte:</h3>
-                <ul>
-                    {% for product in products %}
-                    <li class="li">{{ product }}</li>
-                    {% endfor %}
-                </ul>
-                <form class="form-in-div" action="{{ url_for('buy_check') }}"
-                    method="post">
-                    <input type="hidden" name="user" value="{{ username }}">
-                    {% for product in products %}
-                    <input type="hidden" name="products" value="{{ product }}">
-                    {% endfor %}
-                    <input type="hidden" name="quantity" value="{{ quantity }}">
-                    <button class="bt" type="submit">Kauf bestätigen</button>
-                </form>
-                <form class="form-in-div"
-                    action="{{ url_for('retry_purchase') }}" method="post">
-                    <button class="bt" type="submit">Kauf erneut
-                        versuchen</button>
-                </form>
-            </div>
-        </main>
-    </body>
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kauf Übersicht</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1 class="topic">Kauf Übersicht</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Startseite</a></li>
+                <li><a href="/add_buy">Neuen Kauf hinzufügen</a></li>
+                <li><a href="#" onclick="history.back();">Zurück</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="container">
+            <h2>Vielen Dank für Ihren Kauf!</h2>
+            <p>Teilnehmerbarcode: {{ username }}</p>
+            <h3>Gekaufte Produkte:</h3>
+            <ul>
+                {% for product, quantity in product_data.items() %}
+                <li class="li">{{ product }} ({{ quantity }} Stück)</li>
+                {% endfor %}
+            </ul>
+            <p>Gesammtpreis: {{ gesammtpreis }} €</p>
+            <form class="form-in-div" action="{{ url_for('buy_check') }}" method="post">
+                <input type="hidden" name="user" value="{{ username }}">
+                {% for product, quantity in product_data.items() %}
+                {% for _ in range(quantity) %}
+                <input type="hidden" name="products" value="{{ product }}">
+                {% endfor %}
+                {% endfor %}
+                <button class="bt" type="submit">Kauf bestätigen</button>
+            </form>
+            <form class="form-in-div" action="{{ url_for('retry_purchase') }}" method="post">
+                <button class="bt" type="submit">Kauf erneut versuchen</button>
+            </form>
+        </div>
+    </main>
+</body>
 </html>
